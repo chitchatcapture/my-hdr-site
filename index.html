@@ -5,144 +5,172 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ULTRA HDR • CLARENCE</title>
     <style>
-        :root { --bg: #000; --text: #fff; --glass: rgba(20, 20, 20, 0.7); }
+        :root { --bg: #000; --glass: rgba(15, 15, 15, 0.85); }
         
-        body, html { 
-            background: var(--bg); color: var(--text); margin: 0; padding: 0;
+        /* 1. GPU Acceleration: Tells the computer to use its graphics card for smooth motion */
+        html, body { 
+            background: var(--bg); color: #fff; margin: 0; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            overflow-x: hidden; height: 100%;
-            /* Apple-style Snap Scroll */
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
+            height: 100%; overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* Anti-Theft Protection */
+        /* 2. Film Grain Overlay (Optimized to not lag the CPU) */
+        .grain {
+            position: fixed; top: -150%; left: -150%; width: 300%; height: 300%;
+            background-image: url('https://upload.wikimedia.org');
+            opacity: 0.03; pointer-events: none; z-index: 9999;
+            animation: grain 8s steps(10) infinite;
+            will-change: transform; /* Helps GPU performance */
+        }
+
+        @keyframes grain {
+            0%, 100% { transform:translate(0, 0); }
+            10% { transform:translate(-2%, -1%); }
+            50% { transform:translate(-5%, 5%); }
+        }
+
+        /* Protection */
         * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 
-        /* Cinematic Header */
-        header { 
-            height: 100vh; display: flex; flex-direction: column; 
+        #main-wrapper {
+            transition: transform 1.6s cubic-bezier(0.25, 1, 0.3, 1);
+            will-change: transform; /* Prevents "jitter" during long scrolls */
+        }
+
+        header, section {
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column; 
             justify-content: center; align-items: center; text-align: center;
-            scroll-snap-align: start;
+            position: relative; overflow: hidden;
         }
         
-        h1 { font-size: 0.8rem; font-weight: 400; letter-spacing: 0.6em; text-transform: uppercase; margin: 0; opacity: 0.8; }
-        .credit { color: #444; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 25px; }
+        h1 { font-size: 0.75rem; font-weight: 400; letter-spacing: 0.7em; text-transform: uppercase; margin: 0; opacity: 0.6; }
+        .credit { color: #333; font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 30px; }
 
-        /* Full-Screen Image Sections */
-        section {
-            height: 100vh; width: 100vw;
-            display: flex; justify-content: center; align-items: center;
-            scroll-snap-align: start; position: relative;
-            overflow: hidden;
-        }
-
-        .photo-container {
-            width: 85%; height: 80vh;
-            display: flex; justify-content: center; align-items: center;
-        }
+        .photo-container { width: 85%; height: 80vh; display: flex; justify-content: center; align-items: center; }
 
         img {
-            max-width: 100%; max-height: 100%;
-            border-radius: 2px;
-            box-shadow: 0 50px 120px rgba(0,0,0,0.95);
+            max-width: 100%; max-height: 100%; border-radius: 1px;
+            box-shadow: 0 80px 160px rgba(0,0,0,1);
             -webkit-user-drag: none; pointer-events: none;
-            /* The "Floating" Parallax Animation */
-            animation: cinematicFloat 18s ease-in-out infinite;
-            transition: opacity 1.5s ease;
+            /* Animation optimized for stability */
+            animation: cinematicFloat 22s ease-in-out infinite;
+            will-change: transform, scale;
         }
 
         @keyframes cinematicFloat {
-            0%, 100% { transform: scale(1.03) translateY(0) rotate(0.05deg); }
-            50% { transform: scale(1.06) translateY(-12px) rotate(-0.05deg); }
+            0%, 100% { transform: scale(1.02) translateY(0); }
+            50% { transform: scale(1.06) translateY(-15px); }
         }
 
-        /* Premium Frosted Glass Toggle */
         #slideshow-btn {
-            position: fixed; bottom: 40px; right: 40px; z-index: 1000;
-            background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.08);
-            color: #fff; padding: 14px 28px; border-radius: 50px;
-            font-size: 0.65rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase;
-            cursor: pointer; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            position: fixed; bottom: 45px; right: 45px; z-index: 10000;
+            background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.08); color: #fff; padding: 14px 30px; border-radius: 60px;
+            font-size: 0.6rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase;
+            cursor: pointer; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
 
-        #slideshow-btn:hover { background: #fff; color: #000; border-color: #fff; }
-        #slideshow-btn.active { 
-            background: #fff; color: #000; 
-            box-shadow: 0 0 30px rgba(255,255,255,0.15); 
-        }
+        #slideshow-btn:active { transform: scale(0.92); }
+        #slideshow-btn.active { background: #fff; color: #000; }
 
-        /* Phone Specific Adjustments */
         @media (max-width: 768px) {
             .photo-container { width: 92%; height: 75vh; }
-            #slideshow-btn { bottom: 30px; right: 20px; padding: 12px 22px; font-size: 0.55rem; }
+            #slideshow-btn { bottom: 35px; right: 25px; padding: 12px 24px; font-size: 0.5rem; }
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <header>
-        <h1>Ultra HDR Portfolio</h1>
-        <div class="credit">Photographed by Clarence • 2023–2025</div>
-    </header>
+    <div class="grain"></div>
 
-    <div id="gallery-root"></div>
+    <div id="main-wrapper">
+        <header>
+            <h1>Ultra HDR Portfolio</h1>
+            <div class="credit">Photographed by Clarence • 2023–2025</div>
+        </header>
+        <div id="gallery-root"></div>
+    </div>
 
     <button id="slideshow-btn">Start Slideshow</button>
 
     <script>
         const root = document.getElementById('gallery-root');
+        const wrapper = document.getElementById('main-wrapper');
         const totalImages = 39;
+        let currentIdx = 0;
         let autoPlayActive = false;
         let slideTimer;
 
-        // 1. Build the Gallery Sections
+        // 3. Crash Prevention: Generate sections but keep images "Empty" until needed
         for (let i = 1; i <= totalImages; i++) {
             const sec = document.createElement('section');
-            sec.innerHTML = `<div class="photo-container"><img src="img-${i}.avif" loading="lazy"></div>`;
+            sec.setAttribute('data-id', i);
+            sec.innerHTML = `<div class="photo-container"></div>`;
             root.appendChild(sec);
         }
 
-        const btn = document.getElementById('slideshow-btn');
+        const sections = document.querySelectorAll('section');
 
-        // 2. The Slideshow Engine (4s dwell + 1s transition)
-        function nextSlide() {
-            const currentIdx = Math.round(window.scrollY / window.innerHeight);
-            const nextIdx = (currentIdx + 1) % (totalImages + 1);
-            
-            window.scrollTo({
-                top: nextIdx * window.innerHeight,
-                behavior: 'smooth'
-            });
+        function goToSlide(index) {
+            if (index < 0) index = 0;
+            if (index > totalImages) index = totalImages;
+            currentIdx = index;
+            wrapper.style.transform = `translateY(-${index * 100}vh)`;
         }
 
+        // 4. Memory Management: Load images only when they are close to appearing
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('data-id');
+                const container = entry.target.querySelector('.photo-container');
+                
+                if (entry.isIntersecting) {
+                    if (!container.innerHTML) {
+                        container.innerHTML = `<img src="img-${id}.avif" loading="lazy">`;
+                    }
+                } else {
+                    // Optional: Clear memory of distant images (Useful for older phones)
+                    // container.innerHTML = ""; 
+                }
+            });
+        }, { rootMargin: "100% 0px", threshold: 0.01 });
+
+        sections.forEach(sec => observer.observe(sec));
+
+        // Keyboard & Controls
+        window.addEventListener('keydown', (e) => {
+            if (autoPlayActive) toggleSlideshow();
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") goToSlide(currentIdx + 1);
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") goToSlide(currentIdx - 1);
+        });
+
+        const btn = document.getElementById('slideshow-btn');
         function toggleSlideshow() {
             autoPlayActive = !autoPlayActive;
-            
+            btn.classList.toggle('active');
+            btn.innerText = autoPlayActive ? "Stop Slideshow" : "Start Slideshow";
             if (autoPlayActive) {
-                btn.innerText = "Stop Slideshow";
-                btn.classList.add('active');
-                // Wait 4 seconds on current image before starting first move
-                slideTimer = setInterval(nextSlide, 5000); 
+                slideTimer = setInterval(() => {
+                    goToSlide((currentIdx + 1) % (totalImages + 1));
+                }, 5800);
             } else {
-                btn.innerText = "Start Slideshow";
-                btn.classList.remove('active');
                 clearInterval(slideTimer);
             }
         }
-
         btn.addEventListener('click', toggleSlideshow);
 
-        // 3. User Intelligence: If user scrolls manually, stop the show
-        window.addEventListener('wheel', () => {
+        // Prevent Scroll Crash
+        let lastScroll = 0;
+        window.addEventListener('wheel', (e) => {
+            const now = Date.now();
+            if (now - lastScroll < 1700) return;
+            lastScroll = now;
             if (autoPlayActive) toggleSlideshow();
-        }, { passive: true });
-
-        window.addEventListener('touchstart', () => {
-            if (autoPlayActive) toggleSlideshow();
+            if (e.deltaY > 0) goToSlide(currentIdx + 1);
+            else goToSlide(currentIdx - 1);
         }, { passive: true });
     </script>
 </body>
