@@ -3,39 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra HDR Gallery</title>
+    <title>HDR Portfolio</title>
     <style>
-        :root { --bg: #0a0a0a; --text: #eee; --btn: #444; }
-        [data-theme="light"] { --bg: #f4f4f4; --text: #222; --btn: #ccc; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; text-align: center; transition: 0.3s; padding: 40px 20px; margin: 0; }
-        .container { max-width: 1000px; margin: auto; }
-        #theme-toggle { background: var(--btn); color: var(--text); border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; margin-bottom: 30px; }
-        picture img { width: 100%; height: auto; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        :root { --bg: #050505; --accent: #fff; --text-muted: #888; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; text-align: center; }
+        header { padding: 80px 20px; }
+        h1 { font-size: 1.2rem; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; }
+        #gallery { width: 100%; max-width: 1200px; padding: 0 20px 100px 20px; display: flex; flex-direction: column; gap: 80px; margin: auto; }
+        .photo-wrapper { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
+        .photo-wrapper.visible { opacity: 1; transform: translateY(0); }
+        img { width: 100%; border-radius: 2px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
-
-    <div class="container">
-        <button id="theme-toggle">Switch Mode</button>
-        <h1>Ultra HDR Photography</h1>
-
-        <picture>
-            <!-- High-Brightness HDR File -->
-            <source srcset="IMG_0235.avif" type="image/avif">
-            <!-- Standard Fallback File -->
-            <img src="IMG_0127.JPG" alt="HDR Landscape">
-        </picture>
-        
-        <p style="margin-top: 20px; opacity: 0.6;">Use Chrome/Edge on an HDR screen for full brightness.</p>
-    </div>
-
+    <header>
+        <h1>Ultra HDR Portfolio</h1>
+        <div style="color: #888;">Captured in 10-bit AVIF</div>
+    </header>
+    <div id="gallery"></div>
     <script>
-        const btn = document.getElementById("theme-toggle");
-        btn.addEventListener("click", () => {
-            document.body.getAttribute("data-theme") === "light" 
-            ? document.body.removeAttribute("data-theme") 
-            : document.body.setAttribute("data-theme", "light");
-        });
+        const gallery = document.getElementById('gallery');
+        const totalImages = 39; 
+        for (let i = 1; i <= totalImages; i++) {
+            const div = document.createElement('div');
+            div.className = 'photo-wrapper';
+            div.innerHTML = `<img src="img-${i}.avif" loading="lazy">`;
+            gallery.appendChild(div);
+        }
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.photo-wrapper').forEach(img => observer.observe(img));
     </script>
 </body>
 </html>
