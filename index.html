@@ -3,60 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultra HDR Portfolio</title>
+    <title>HDR Portfolio</title>
     <style>
-        :root { --bg: #050505; --text: #f0f0f0; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; }
+        :root { --bg: #050505; --text: #f0f0f0; --gap: 80px; }
+        
+        body { 
+            background: var(--bg); color: var(--text); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0; padding: 0; overflow-x: hidden;
+        }
+
+        /* Protection */
         * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
-        header { padding: 80px 20px; text-align: center; }
-        h1 { font-size: 0.9rem; font-weight: 300; letter-spacing: 0.4em; text-transform: uppercase; }
+        header { padding: 120px 20px 80px; text-align: center; }
+        h1 { font-size: 0.8rem; font-weight: 300; letter-spacing: 0.5em; text-transform: uppercase; opacity: 0.7; }
 
-        /* THE MASTER GRID */
+        /* Gallery Structure */
         #gallery { 
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* Default 3 columns */
-            gap: 40px;
-            max-width: 1400px;
-            margin: 0 auto 100px;
-            padding: 0 20px;
-        }
-
-        /* Landscape/Horizontal Photos: Span all 3 columns */
-        .photo-wrapper.landscape {
-            grid-column: span 3;
-            margin: 40px 0;
-        }
-
-        /* Portrait/Vertical Photos: Take up 1 column automatically */
-        .photo-wrapper.portrait {
-            grid-column: span 1;
+            display: flex; flex-wrap: wrap; justify-content: center;
+            max-width: 1400px; margin: 0 auto 150px; gap: var(--gap); padding: 0 40px;
         }
 
         .photo-wrapper { 
             display: flex; justify-content: center; align-items: center;
-            opacity: 0; transform: translateY(20px); transition: all 1s ease-out;
+            opacity: 0; transform: translateY(40px); transition: all 1.2s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
         .photo-wrapper.visible { opacity: 1; transform: translateY(0); }
 
+        /* Image Styling */
         img { 
-            width: 100%; height: auto; border-radius: 2px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            display: block; border-radius: 2px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.9);
             -webkit-user-drag: none; pointer-events: none;
         }
 
-        /* Responsive: On phones, everything goes back to 1 column */
-        @media (max-width: 800px) {
-            #gallery { grid-template-columns: 1fr; gap: 60px; }
-            .photo-wrapper.landscape, .photo-wrapper.portrait { grid-column: span 1; margin: 0; }
+        /* 1. Cover Image (Full width, Cinematic) */
+        .photo-wrapper.is-cover { width: 100%; margin-bottom: 100px; }
+        .photo-wrapper.is-cover img { max-width: 85%; max-height: 80vh; }
+
+        /* 2. Landscape Photos (Alone, centered, slightly shrunk) */
+        .photo-wrapper.landscape { width: 100%; margin: 40px 0; }
+        .photo-wrapper.landscape img { max-width: 80%; max-height: 75vh; }
+
+        /* 3. Vertical Photos (2 per row on desktop) */
+        .photo-wrapper.portrait { width: calc(50% - (var(--gap) / 2)); }
+        .photo-wrapper.portrait img { max-width: 100%; max-height: 85vh; }
+
+        /* Responsive for Phones */
+        @media (max-width: 900px) {
+            #gallery { gap: 60px; padding: 0 20px; }
+            .photo-wrapper.portrait, .photo-wrapper.landscape, .photo-wrapper.is-cover { width: 100%; }
+            img { max-width: 95% !important; max-height: 75vh !important; }
         }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <header>
-        <h1>Portfolio</h1>
+        <h1>Ultra HDR Portfolio</h1>
     </header>
 
     <div id="gallery"></div>
@@ -69,18 +75,22 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'photo-wrapper';
             
+            // Mark the first image as the Cover
+            if (i === 1) wrapper.classList.add('is-cover');
+
             const img = new Image();
             img.src = `img-${i}.avif`;
             img.loading = "lazy";
 
-            // Detect orientation once the image data starts loading
             img.onload = function() {
+                // Determine orientation
                 if (this.naturalWidth > this.naturalHeight) {
                     wrapper.classList.add('landscape');
                 } else {
                     wrapper.classList.add('portrait');
                 }
-                wrapper.appendChild(img);
+                
+                wrapper.appendChild(this);
                 observer.observe(wrapper);
             };
 
