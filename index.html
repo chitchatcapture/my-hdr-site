@@ -169,10 +169,11 @@
             btn.classList.toggle('active');
             btn.innerText = autoPlayActive ? "Stop Slideshow" : "Start Slideshow";
             if (autoPlayActive) {
+                // CHANGED TO 4 SECONDS (4000ms)
                 slideTimer = setInterval(() => {
                     const next = (currentIdx + 1) % sections.length;
                     goToSlide(next);
-                }, 5800);
+                }, 4000); 
             } else {
                 clearInterval(slideTimer);
             }
