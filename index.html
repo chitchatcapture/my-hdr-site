@@ -3,37 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HDR Portfolio</title>
+    <title>Ultra HDR Portfolio</title>
     <style>
-        :root { --bg: #050505; --accent: #fff; --text-muted: #888; }
-        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; text-align: center; }
-        header { padding: 80px 20px; }
-        h1 { font-size: 1.2rem; font-weight: 300; letter-spacing: 0.2em; text-transform: uppercase; }
-        #gallery { width: 100%; max-width: 1200px; padding: 0 20px 100px 20px; display: flex; flex-direction: column; gap: 80px; margin: auto; }
-        .photo-wrapper { opacity: 0; transform: translateY(20px); transition: all 0.8s ease-out; }
+        :root { --bg: #050505; --text: #f0f0f0; }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; 
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header { padding: 100px 20px 60px; text-align: center; }
+        h1 { font-size: 0.9rem; font-weight: 300; letter-spacing: 0.4em; text-transform: uppercase; margin: 0; }
+        .tech-spec { color: #666; font-size: 0.7rem; letter-spacing: 0.15em; margin-top: 15px; }
+
+        /* The Gallery Container */
+        #gallery { 
+            width: 100%;
+            display: flex; 
+            flex-direction: column; 
+            gap: 120px; /* Elegant distance between shots */
+            padding-bottom: 150px;
+        }
+
+        /* This wrapper ensures every photo stays centered */
+        .photo-wrapper { 
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.2s cubic-bezier(0.2, 1, 0.3, 1);
+        }
+
         .photo-wrapper.visible { opacity: 1; transform: translateY(0); }
-        img { width: 100%; border-radius: 2px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+
+        /* THE ADAPTIVE LOGIC */
+        img { 
+            display: block;
+            max-width: 90%;  /* Leaves a 5% margin on the sides of desktop */
+            max-height: 85vh; /* Never taller than 85% of the screen height */
+            width: auto;      /* Keeps original ratio */
+            height: auto;     /* Keeps original ratio */
+            object-fit: contain;
+            border-radius: 2px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+        }
+
+        /* Mobile specific tweaks for iPhones */
+        @media (max-width: 768px) {
+            header { padding: 60px 20px 40px; }
+            #gallery { gap: 60px; }
+            img { 
+                max-width: 95%; 
+                max-height: 75vh; /* Shorter for mobile to allow for browser bars */
+            }
+        }
+
+        footer { padding: 60px; color: #444; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; }
     </style>
 </head>
 <body>
+
     <header>
-        <h1>Ultra HDR Portfolio</h1>
-        <div style="color: #888;">Captured in 10-bit AVIF</div>
+        <h1>Portfolio</h1>
+        <div class="tech-spec">AVIF ULTRA HDR • 10-BIT</div>
     </header>
-    <div id="gallery"></div>
+
+    <div id="gallery">
+        <!-- Images injected here -->
+    </div>
+
+    <footer>&copy; 2026 • Best viewed on HDR displays</footer>
+
     <script>
         const gallery = document.getElementById('gallery');
         const totalImages = 39; 
+        
         for (let i = 1; i <= totalImages; i++) {
-            const div = document.createElement('div');
-            div.className = 'photo-wrapper';
-            div.innerHTML = `<img src="img-${i}.avif" loading="lazy">`;
-            gallery.appendChild(div);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'photo-wrapper';
+            wrapper.innerHTML = `<img src="img-${i}.avif" loading="lazy" alt="HDR Photography">`;
+            gallery.appendChild(wrapper);
         }
+
+        // Animation: Fade in as you scroll
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
         }, { threshold: 0.1 });
-        document.querySelectorAll('.photo-wrapper').forEach(img => observer.observe(img));
+
+        document.querySelectorAll('.photo-wrapper').forEach(w => observer.observe(w));
     </script>
 </body>
 </html>
