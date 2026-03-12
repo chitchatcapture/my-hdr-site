@@ -2,104 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ULTRA HDR • CLARENCE</title>
     <style>
         :root { 
             --bg: #000; 
-            --glass: rgba(15, 15, 15, 0.85); 
-            --ui-white: rgba(255, 255, 255, 0.9);
+            --glass: rgba(15, 15, 15, 0.7); 
+            --ui: rgba(255, 255, 255, 0.9);
         }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            height: 100%; overflow: hidden;
+            height: 100%; width: 100%; overflow: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Protection & Cleanup */
-        * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-
+        /* 1. NATIVE SCROLL SNAP: This makes mobile feel "Natural" */
         #main-wrapper {
-            transition: transform 1.4s cubic-bezier(0.23, 1, 0.32, 1);
-            will-change: transform;
+            height: 100vh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
 
         header, section {
             height: 100vh; width: 100vw;
             display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; text-align: center;
-            position: relative; overflow: hidden;
+            justify-content: center; align-items: center;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            position: relative;
         }
         
-        h1 { font-size: 0.75rem; font-weight: 400; letter-spacing: 0.7em; text-transform: uppercase; margin: 0; opacity: 0.6; }
-        .credit { color: #444; font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 30px; }
+        h1 { font-size: 0.75rem; font-weight: 300; letter-spacing: 0.8em; text-transform: uppercase; opacity: 0.5; }
+        .credit { color: #333; font-size: 0.5rem; letter-spacing: 0.4em; text-transform: uppercase; margin-top: 30px; }
 
-        .photo-container { width: 85%; height: 80vh; display: flex; justify-content: center; align-items: center; }
+        .photo-container { 
+            width: 90%; height: 80vh; 
+            display: flex; justify-content: center; align-items: center; 
+            overflow: hidden;
+        }
 
+        /* 2. SMOOTH FADE-IN ANIMATION */
         img {
             max-width: 100%; max-height: 100%; border-radius: 2px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
-            -webkit-user-drag: none; pointer-events: none;
-            animation: cinematicFloat 18s ease-in-out infinite;
-            will-change: transform;
+            box-shadow: 0 40px 100px rgba(0,0,0,1);
+            opacity: 0;
+            transform: scale(0.98);
+            transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.2, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        /* Triggered when slide is in view */
+        section.active img {
+            opacity: 1;
+            transform: scale(1.02);
+            animation: cinematicFloat 20s ease-in-out infinite;
         }
 
         @keyframes cinematicFloat {
-            0%, 100% { transform: scale(1.01) translateY(0); }
-            50% { transform: scale(1.04) translateY(-10px); }
+            50% { transform: scale(1.05) translateY(-10px); }
         }
 
-        /* Controls: Slideshow Button */
+        /* UI CONTROLS */
         #slideshow-btn {
-            position: fixed; bottom: 45px; right: 45px; z-index: 10000;
-            background: var(--glass); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 14px 28px; border-radius: 50px;
-            font-size: 0.6rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase;
-            cursor: pointer; transition: all 0.4s ease;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            position: fixed; bottom: 35px; right: 35px; z-index: 10000;
+            background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px 26px; border-radius: 50px;
+            font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+            cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.8); transition: 0.3s;
         }
-        #slideshow-btn:active { transform: scale(0.95); }
         #slideshow-btn.active { background: #fff; color: #000; font-weight: 700; }
 
-        /* Controls: High-Visibility Arrows (Desktop Only) */
         .controls-hint {
-            position: fixed; bottom: 45px; left: 45px; z-index: 10000;
-            display: none; flex-direction: column; align-items: center; gap: 6px;
+            position: fixed; bottom: 35px; left: 35px; z-index: 10000;
+            display: none; flex-direction: column; gap: 5px; opacity: 0.8;
         }
         @media (min-width: 801px) { .controls-hint { display: flex; } }
         
-        .key-row { display: flex; gap: 6px; }
-        .key-box {
-            width: 26px; height: 26px; 
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1.5px solid var(--ui-white); border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+        .key {
+            width: 24px; height: 24px; border: 1.5px solid var(--ui); border-radius: 5px;
+            background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
         }
-        
-        .key-box::after { 
-            content: ''; display: block; 
-            border: solid #fff; border-width: 0 2px 2px 0; 
-            padding: 3px; 
-        }
-        .key-up::after { transform: rotate(-135deg); }
-        .key-down::after { transform: rotate(45deg); }
-        .key-left::after { transform: rotate(135deg); }
-        .key-right::after { transform: rotate(-45deg); }
+        .key::after { content: ''; border: solid #fff; border-width: 0 2px 2px 0; padding: 2.5px; }
+        .u::after { transform: rotate(-135deg); } .d::after { transform: rotate(45deg); }
+        .l::after { transform: rotate(135deg); } .r::after { transform: rotate(-45deg); }
 
-        @media (max-width: 768px) {
-            .photo-container { width: 94%; height: 70vh; }
-            #slideshow-btn { bottom: 30px; right: 30px; padding: 12px 22px; }
-        }
+        @media (max-width: 768px) { .photo-container { width: 95%; height: 70vh; } }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <div id="main-wrapper">
-        <header>
+        <header class="active">
             <h1>Ultra HDR Portfolio</h1>
             <div class="credit">Photographed by Clarence • 2023–2025</div>
         </header>
@@ -107,12 +104,8 @@
     </div>
 
     <div class="controls-hint">
-        <div class="key-row"><div class="key-box key-up"></div></div>
-        <div class="key-row">
-            <div class="key-box key-left"></div>
-            <div class="key-box key-down"></div>
-            <div class="key-box key-right"></div>
-        </div>
+        <div style="display:flex; justify-content:center;"><div class="key u"></div></div>
+        <div style="display:flex; gap:5px;"><div class="key l"></div><div class="key d"></div><div class="key r"></div></div>
     </div>
 
     <button id="slideshow-btn">Start Slideshow</button>
@@ -120,75 +113,69 @@
     <script>
         const root = document.getElementById('gallery-root');
         const wrapper = document.getElementById('main-wrapper');
-        const totalImages = 39;
-        let currentIdx = 0;
-        let autoPlayActive = false;
+        const total = 39;
+        let autoPlay = false;
         let slideTimer;
 
-        for (let i = 1; i <= totalImages; i++) {
-            const sec = document.createElement('section');
-            sec.setAttribute('data-id', i);
-            sec.innerHTML = `<div class="photo-container"></div>`;
-            root.appendChild(sec);
+        // Generate Sections
+        for (let i = 1; i <= total; i++) {
+            const s = document.createElement('section');
+            s.dataset.id = i;
+            s.innerHTML = `<div class="photo-container"></div>`;
+            root.appendChild(s);
         }
 
         const sections = document.querySelectorAll('header, section');
 
-        function goToSlide(index) {
-            if (index < 0) index = 0;
-            if (index >= sections.length) index = sections.length - 1;
-            currentIdx = index;
-            wrapper.style.transform = `translateY(-${index * 100}vh)`;
-        }
-
-        const observer = new IntersectionObserver((entries) => {
+        // 3. INTERSECTION OBSERVER: Handles smooth fade-ins and lazy loading
+        const obs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    const id = entry.target.getAttribute('data-id');
-                    if (id) {
-                        const container = entry.target.querySelector('.photo-container');
-                        if (container && !container.innerHTML) {
-                            container.innerHTML = `<img src="img-${id}.avif" loading="lazy">`;
-                        }
+                    entry.target.classList.add('active');
+                    const id = entry.target.dataset.id;
+                    const container = entry.target.querySelector('.photo-container');
+                    if (id && container && !container.innerHTML) {
+                        container.innerHTML = `<img src="img-${id}.avif" onload="this.style.opacity=1">`;
                     }
+                } else {
+                    entry.target.classList.remove('active');
                 }
             });
-        }, { rootMargin: "100% 0px", threshold: 0.01 });
+        }, { threshold: 0.5 });
 
-        document.querySelectorAll('section').forEach(sec => observer.observe(sec));
+        sections.forEach(s => obs.observe(s));
+
+        // Keyboard & Slideshow Logic
+        function goTo(idx) {
+            if (idx < 0 || idx >= sections.length) return;
+            sections[idx].scrollIntoView({ behavior: 'smooth' });
+        }
 
         window.addEventListener('keydown', (e) => {
-            if (autoPlayActive && (e.key.includes("Arrow"))) toggleSlideshow();
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") goToSlide(currentIdx + 1);
-            if (e.key === "ArrowUp" || e.key === "ArrowLeft") goToSlide(currentIdx - 1);
+            const current = Math.round(wrapper.scrollTop / window.innerHeight);
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") goTo(current + 1);
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") goTo(current - 1);
         });
 
         const btn = document.getElementById('slideshow-btn');
-        function toggleSlideshow() {
-            autoPlayActive = !autoPlayActive;
+        btn.addEventListener('click', () => {
+            autoPlay = !autoPlay;
             btn.classList.toggle('active');
-            btn.innerText = autoPlayActive ? "Stop Slideshow" : "Start Slideshow";
-            if (autoPlayActive) {
-                // CHANGED TO 4 SECONDS (4000ms)
+            btn.innerText = autoPlay ? "Stop Slideshow" : "Start Slideshow";
+            if (autoPlay) {
                 slideTimer = setInterval(() => {
-                    const next = (currentIdx + 1) % sections.length;
-                    goToSlide(next);
-                }, 4000); 
+                    const current = Math.round(wrapper.scrollTop / window.innerHeight);
+                    const next = (current + 1) % sections.length;
+                    goTo(next);
+                }, 4000);
             } else {
                 clearInterval(slideTimer);
             }
-        }
-        btn.addEventListener('click', toggleSlideshow);
+        });
 
-        let lastScroll = 0;
-        window.addEventListener('wheel', (e) => {
-            const now = Date.now();
-            if (now - lastScroll < 1400) return;
-            lastScroll = now;
-            if (autoPlayActive) toggleSlideshow();
-            if (e.deltaY > 0) goToSlide(currentIdx + 1);
-            else goToSlide(currentIdx - 1);
-        }, { passive: true });
+        // Stops slideshow if user manually scrolls
+        wrapper.addEventListener('touchstart', () => { if(autoPlay) btn.click(); });
+        wrapper.addEventListener('wheel', () => { if(autoPlay) btn.click(); });
     </script>
 </body>
 </html>
