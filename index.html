@@ -3,39 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HDR Portfolio</title>
+    <title>Ultra HDR Portfolio</title>
     <style>
-        :root { --bg: #050505; --text: #eee; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; text-align: center; }
+        :root { --bg: #050505; --text: #f0f0f0; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 0; }
+        * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
-        /* 1. DISBALE TEXT/IMAGE SELECTION */
-        * { 
-            -webkit-user-select: none; 
-            user-select: none; 
-            -webkit-touch-callout: none; /* Disables the long-press menu on iPhone */
+        header { padding: 80px 20px; text-align: center; }
+        h1 { font-size: 0.9rem; font-weight: 300; letter-spacing: 0.4em; text-transform: uppercase; }
+
+        /* THE MASTER GRID */
+        #gallery { 
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* Default 3 columns */
+            gap: 40px;
+            max-width: 1400px;
+            margin: 0 auto 100px;
+            padding: 0 20px;
         }
 
-        #gallery { max-width: 1100px; margin: 0 auto; padding: 100px 20px; display: flex; flex-direction: column; gap: 120px; }
-        
-        .photo-wrapper { opacity: 0; transform: translateY(30px); transition: all 1.2s ease-out; }
+        /* Landscape/Horizontal Photos: Span all 3 columns */
+        .photo-wrapper.landscape {
+            grid-column: span 3;
+            margin: 40px 0;
+        }
+
+        /* Portrait/Vertical Photos: Take up 1 column automatically */
+        .photo-wrapper.portrait {
+            grid-column: span 1;
+        }
+
+        .photo-wrapper { 
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; transform: translateY(20px); transition: all 1s ease-out;
+        }
+
         .photo-wrapper.visible { opacity: 1; transform: translateY(0); }
 
         img { 
-            max-width: 100%; max-height: 85vh; width: auto; height: auto;
-            border-radius: 2px; box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-            
-            /* 2. DISABLE DRAGGING */
-            -webkit-user-drag: none;
-            pointer-events: none; /* Makes the image "invisible" to clicks, preventing saves */
+            width: 100%; height: auto; border-radius: 2px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            -webkit-user-drag: none; pointer-events: none;
+        }
+
+        /* Responsive: On phones, everything goes back to 1 column */
+        @media (max-width: 800px) {
+            #gallery { grid-template-columns: 1fr; gap: 60px; }
+            .photo-wrapper.landscape, .photo-wrapper.portrait { grid-column: span 1; margin: 0; }
         }
     </style>
 </head>
-
-<!-- 3. DISABLE RIGHT-CLICK MENU GLOBALLY -->
 <body oncontextmenu="return false;">
 
-    <header style="padding: 100px 20px 40px;">
-        <h1 style="font-size: 0.9rem; font-weight: 300; letter-spacing: 0.4em; text-transform: uppercase;">Ultra HDR Portfolio</h1>
+    <header>
+        <h1>Portfolio</h1>
     </header>
 
     <div id="gallery"></div>
@@ -43,16 +64,34 @@
     <script>
         const gallery = document.getElementById('gallery');
         const totalImages = 39; 
+        
         for (let i = 1; i <= totalImages; i++) {
-            const div = document.createElement('div');
-            div.className = 'photo-wrapper';
-            div.innerHTML = `<img src="img-${i}.avif" loading="lazy">`;
-            gallery.appendChild(div);
+            const wrapper = document.createElement('div');
+            wrapper.className = 'photo-wrapper';
+            
+            const img = new Image();
+            img.src = `img-${i}.avif`;
+            img.loading = "lazy";
+
+            // Detect orientation once the image data starts loading
+            img.onload = function() {
+                if (this.naturalWidth > this.naturalHeight) {
+                    wrapper.classList.add('landscape');
+                } else {
+                    wrapper.classList.add('portrait');
+                }
+                wrapper.appendChild(img);
+                observer.observe(wrapper);
+            };
+
+            gallery.appendChild(wrapper);
         }
+
         const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
         }, { threshold: 0.1 });
-        document.querySelectorAll('.photo-wrapper').forEach(w => observer.observe(w));
     </script>
 </body>
 </html>
