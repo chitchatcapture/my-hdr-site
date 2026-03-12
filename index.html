@@ -5,20 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ULTRA HDR • CLARENCE</title>
     <style>
-        :root { --bg: #000; --accent: #fff; }
+        :root { --bg: #000; --text: #fff; --glass: rgba(20, 20, 20, 0.7); }
         
         body, html { 
-            background: var(--bg); color: #fff; margin: 0; padding: 0;
+            background: var(--bg); color: var(--text); margin: 0; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
             overflow-x: hidden; height: 100%;
-            /* Snap Scroll Logic */
+            /* Apple-style Snap Scroll */
             scroll-snap-type: y mandatory;
             scroll-behavior: smooth;
         }
 
-        /* Protection */
+        /* Anti-Theft Protection */
         * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 
+        /* Cinematic Header */
         header { 
             height: 100vh; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; text-align: center;
@@ -26,9 +27,9 @@
         }
         
         h1 { font-size: 0.8rem; font-weight: 400; letter-spacing: 0.6em; text-transform: uppercase; margin: 0; opacity: 0.8; }
-        .credit { color: #444; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 20px; }
+        .credit { color: #444; font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 25px; }
 
-        /* Gallery Sections */
+        /* Full-Screen Image Sections */
         section {
             height: 100vh; width: 100vw;
             display: flex; justify-content: center; align-items: center;
@@ -39,42 +40,45 @@
         .photo-container {
             width: 85%; height: 80vh;
             display: flex; justify-content: center; align-items: center;
-            transition: transform 1.5s cubic-bezier(0.2, 1, 0.3, 1);
         }
 
         img {
             max-width: 100%; max-height: 100%;
             border-radius: 2px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.9);
+            box-shadow: 0 50px 120px rgba(0,0,0,0.95);
             -webkit-user-drag: none; pointer-events: none;
-            /* Floating Motion Animation */
-            animation: float 20s ease-in-out infinite;
+            /* The "Floating" Parallax Animation */
+            animation: cinematicFloat 18s ease-in-out infinite;
+            transition: opacity 1.5s ease;
         }
 
-        @keyframes float {
-            0%, 100% { transform: scale(1.02) translateY(0) rotate(0.1deg); }
-            50% { transform: scale(1.05) translateY(-15px) rotate(-0.1deg); }
+        @keyframes cinematicFloat {
+            0%, 100% { transform: scale(1.03) translateY(0) rotate(0.05deg); }
+            50% { transform: scale(1.06) translateY(-12px) rotate(-0.05deg); }
         }
 
-        /* Premium Toggle Button */
-        #auto-toggle {
-            position: fixed; bottom: 40px; right: 40px; z-index: 100;
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 12px 24px; border-radius: 40px;
-            font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase;
-            cursor: pointer; transition: 0.4s;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        /* Premium Frosted Glass Toggle */
+        #slideshow-btn {
+            position: fixed; bottom: 40px; right: 40px; z-index: 1000;
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #fff; padding: 14px 28px; border-radius: 50px;
+            font-size: 0.65rem; font-weight: 500; letter-spacing: 0.25em; text-transform: uppercase;
+            cursor: pointer; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
         }
 
-        #auto-toggle:hover { background: #fff; color: #000; }
-        #auto-toggle.active { border-color: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        #slideshow-btn:hover { background: #fff; color: #000; border-color: #fff; }
+        #slideshow-btn.active { 
+            background: #fff; color: #000; 
+            box-shadow: 0 0 30px rgba(255,255,255,0.15); 
+        }
 
-        /* Mobile specific */
+        /* Phone Specific Adjustments */
         @media (max-width: 768px) {
-            .photo-container { width: 92%; height: 70vh; }
-            #auto-toggle { bottom: 30px; right: 20px; padding: 10px 18px; font-size: 0.55rem; }
+            .photo-container { width: 92%; height: 75vh; }
+            #slideshow-btn { bottom: 30px; right: 20px; padding: 12px 22px; font-size: 0.55rem; }
         }
     </style>
 </head>
@@ -87,47 +91,58 @@
 
     <div id="gallery-root"></div>
 
-    <button id="auto-toggle">Auto: Off</button>
+    <button id="slideshow-btn">Start Slideshow</button>
 
     <script>
         const root = document.getElementById('gallery-root');
         const totalImages = 39;
-        let isAuto = false;
-        let autoInterval;
+        let autoPlayActive = false;
+        let slideTimer;
 
-        // Generate Sections
+        // 1. Build the Gallery Sections
         for (let i = 1; i <= totalImages; i++) {
             const sec = document.createElement('section');
             sec.innerHTML = `<div class="photo-container"><img src="img-${i}.avif" loading="lazy"></div>`;
             root.appendChild(sec);
         }
 
-        // Auto-Play Logic
-        const btn = document.getElementById('auto-toggle');
-        
-        function startAuto() {
-            autoInterval = setInterval(() => {
-                const current = Math.round(window.scrollY / window.innerHeight);
-                const next = (current + 1) % (totalImages + 1);
-                window.scrollTo({ top: next * window.innerHeight, behavior: 'smooth' });
-            }, 5000);
+        const btn = document.getElementById('slideshow-btn');
+
+        // 2. The Slideshow Engine (4s dwell + 1s transition)
+        function nextSlide() {
+            const currentIdx = Math.round(window.scrollY / window.innerHeight);
+            const nextIdx = (currentIdx + 1) % (totalImages + 1);
+            
+            window.scrollTo({
+                top: nextIdx * window.innerHeight,
+                behavior: 'smooth'
+            });
         }
 
-        btn.addEventListener('click', () => {
-            isAuto = !isAuto;
-            btn.classList.toggle('active');
-            btn.innerText = isAuto ? "Auto: On" : "Auto: Off";
-            if (isAuto) startAuto(); else clearInterval(autoInterval);
-        });
-
-        // Optional: Stop auto-play if user manually scrolls
-        window.addEventListener('wheel', () => {
-            if (isAuto) {
-                isAuto = false;
-                clearInterval(autoInterval);
+        function toggleSlideshow() {
+            autoPlayActive = !autoPlayActive;
+            
+            if (autoPlayActive) {
+                btn.innerText = "Stop Slideshow";
+                btn.classList.add('active');
+                // Wait 4 seconds on current image before starting first move
+                slideTimer = setInterval(nextSlide, 5000); 
+            } else {
+                btn.innerText = "Start Slideshow";
                 btn.classList.remove('active');
-                btn.innerText = "Auto: Off";
+                clearInterval(slideTimer);
             }
+        }
+
+        btn.addEventListener('click', toggleSlideshow);
+
+        // 3. User Intelligence: If user scrolls manually, stop the show
+        window.addEventListener('wheel', () => {
+            if (autoPlayActive) toggleSlideshow();
+        }, { passive: true });
+
+        window.addEventListener('touchstart', () => {
+            if (autoPlayActive) toggleSlideshow();
         }, { passive: true });
     </script>
 </body>
