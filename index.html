@@ -5,144 +5,139 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ULTRA HDR • CLARENCE</title>
     <style>
-        :root { 
-            --bg: #000; 
-            --glass: rgba(10, 10, 10, 0.8); 
-            --accent: rgba(255, 255, 255, 0.95);
-        }
+        :root { --bg: #000; --ui: rgba(255, 255, 255, 0.95); }
         
-        html, body { 
-            background: var(--bg); color: #fff; margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            height: 100%; overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+        body, html { 
+            background: var(--bg); margin: 0; padding: 0; overflow: hidden;
+            font-family: -apple-system, "SF Pro Display", sans-serif; color: #fff;
         }
 
-        /* 1. OPTIMIZED WHITE HDR GRAIN (GPU ACCELERATED) */
+        /* 1. PARALLAX HDR GRAIN */
+        .grain-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999;
+        }
+
         .grain {
-            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            opacity: 0.12; pointer-events: none; z-index: 9999;
-            mix-blend-mode: screen;
-            animation: grain-shift 0.2s steps(2) infinite;
+            position: absolute; top: -100%; left: -100%; width: 300%; height: 300%;
+            /* High-Contrast SVG for visibility on #000 */
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='2.5' intercept='-0.4'/%3E%3CfeFuncG type='linear' slope='2.5' intercept='-0.4'/%3E%3CfeFuncB type='linear' slope='2.5' intercept='-0.4'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            opacity: 0.15;
+            mix-blend-mode: overlay;
+            /* Parallax: This element will be moved via JS */
+            transition: transform 1.8s cubic-bezier(0.2, 1, 0.3, 1);
             will-change: transform;
-        }
-        @keyframes grain-shift {
-            0% { transform: translate3d(0, 0, 0); }
-            50% { transform: translate3d(-2%, -2%, 0); }
-            100% { transform: translate3d(1%, 1%, 0); }
         }
 
-        /* Layout & Scroll */
-        #main-wrapper {
-            transition: transform 1.2s cubic-bezier(0.2, 1, 0.3, 1);
-            will-change: transform;
+        /* 2. MAIN LAYOUT */
+        #main-wrapper { 
+            transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1); 
+            will-change: transform; 
         }
 
         header, section {
-            height: 100vh; width: 100vw;
-            display: flex; flex-direction: column; 
+            height: 100vh; width: 100vw; display: flex; flex-direction: column; 
             justify-content: center; align-items: center;
-            position: relative; overflow: hidden;
         }
-        
-        h1 { font-size: 0.8rem; font-weight: 300; letter-spacing: 0.8em; text-transform: uppercase; opacity: 0.5; }
-        .credit { color: #555; font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase; margin-top: 40px; }
 
-        .photo-container { width: 88%; height: 82vh; display: flex; justify-content: center; align-items: center; }
+        /* 3. CINEMATIC FLOATING */
+        .photo-container { 
+            width: 85%; height: 80vh; display: flex; justify-content: center; align-items: center;
+            perspective: 1200px;
+        }
 
         img {
-            max-width: 100%; max-height: 100%; border-radius: 2px;
-            box-shadow: 0 40px 100px rgba(0,0,0,1);
-            animation: breathe 20s ease-in-out infinite;
+            max-width: 100%; max-height: 100%; border-radius: 1px;
+            box-shadow: 0 60px 120px rgba(0,0,0,1);
+            /* Drift Animation */
+            animation: cinematicDrift 15s ease-in-out infinite;
+            filter: contrast(1.05) brightness(1.02);
             will-change: transform;
         }
 
-        @keyframes breathe {
-            0%, 100% { transform: scale(1.02); }
-            50% { transform: scale(1.05) translateY(-8px); }
+        @keyframes cinematicDrift {
+            0%, 100% { transform: translate3d(0, 0, 0) scale(1.01) rotate(0deg); }
+            33% { transform: translate3d(15px, -20px, 40px) scale(1.04) rotate(0.5deg); }
+            66% { transform: translate3d(-10px, 10px, -20px) scale(1.02) rotate(-0.5deg); }
         }
 
-        /* High-Visibility Navigation */
-        .nav-ui {
-            position: fixed; bottom: 40px; z-index: 10000;
-            display: flex; align-items: center; gap: 20px;
-        }
-        
-        #slideshow-btn {
-            right: 40px; background: var(--glass);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.2); color: #fff;
-            padding: 12px 28px; border-radius: 40px; font-size: 0.6rem;
-            letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: 0.3s;
-        }
-        #slideshow-btn.active { background: #fff; color: #000; font-weight: 700; }
-
-        .controls-hint {
-            left: 40px; display: flex; flex-direction: column; gap: 4px; opacity: 0.9;
-        }
-        .key-row { display: flex; gap: 4px; }
-        .key {
-            width: 24px; height: 24px; border-radius: 4px;
-            background: rgba(255,255,255,0.15); border: 1.5px solid var(--accent);
+        /* 4. UI VISIBILITY */
+        .nav-controls { position: fixed; bottom: 40px; z-index: 10000; display: flex; gap: 20px; align-items: center; }
+        .key { 
+            width: 30px; height: 30px; border: 1.8px solid var(--ui); border-radius: 6px;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 15px rgba(0,0,0,1); /* Essential for visibility against white HDR */
+            box-shadow: 0 0 25px rgba(0,0,0,1); /* Shadow prevents washing out on white imgs */
         }
-        .key::after { content: ''; border: solid #fff; border-width: 0 2px 2px 0; padding: 2.5px; }
+        .key::after { content: ''; border: solid #fff; border-width: 0 2px 2px 0; padding: 3px; }
         .u::after { transform: rotate(-135deg); } .d::after { transform: rotate(45deg); }
         .l::after { transform: rotate(135deg); } .r::after { transform: rotate(-45deg); }
 
-        @media (max-width: 768px) { .controls-hint { display: none; } }
+        #slideshow-btn {
+            position: fixed; bottom: 40px; right: 40px; z-index: 10000;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.4); color: #fff; padding: 14px 32px;
+            border-radius: 60px; font-size: 0.65rem; letter-spacing: 0.4em; cursor: pointer;
+            box-shadow: 0 10px 40px rgba(0,0,0,1); transition: 0.4s;
+        }
+        #slideshow-btn:active { transform: scale(0.92); }
+        #slideshow-btn.active { background: #fff; color: #000; font-weight: 800; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
-    <div class="grain"></div>
+    <div class="grain-wrapper">
+        <div class="grain" id="grain-layer"></div>
+    </div>
 
     <div id="main-wrapper">
         <header>
-            <h1>Ultra HDR Portfolio</h1>
-            <div class="credit">Photographed by Clarence • 2023–2025</div>
+            <h1 style="letter-spacing:1.2em; opacity:0.6; font-size:0.75rem;">ULTRA HDR • CLARENCE</h1>
+            <div style="color:#333; font-size:0.5rem; margin-top:25px; letter-spacing: 0.5em;">CURATED PORTFOLIO 2025</div>
         </header>
         <div id="gallery-root"></div>
     </div>
 
-    <div class="nav-ui" style="left:40px;"><div class="controls-hint">
-        <div class="key-row" style="justify-content:center"><div class="key u"></div></div>
-        <div class="key-row"><div class="key l"></div><div class="key d"></div><div class="key r"></div></div>
-    </div></div>
+    <div class="nav-controls" style="left:40px;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:center;"><div class="key u"></div></div>
+            <div style="display:flex; gap:6px;"><div class="key l"></div><div class="key d"></div><div class="key r"></div></div>
+        </div>
+    </div>
 
-    <button id="slideshow-btn" style="position:fixed; bottom:40px; right:40px;">Start Slideshow</button>
+    <button id="slideshow-btn">START SLIDESHOW</button>
 
     <script>
         const root = document.getElementById('gallery-root');
         const wrapper = document.getElementById('main-wrapper');
+        const grainLayer = document.getElementById('grain-layer');
         const total = 39;
         let current = 0;
-        let auto = false;
         let timer;
 
-        // 2. PERFORMANCE: Fragment-based DOM generation
-        const fragment = document.createDocumentFragment();
+        // Build Gallery
         for (let i = 1; i <= total; i++) {
             const s = document.createElement('section');
             s.dataset.id = i;
             s.innerHTML = `<div class="photo-container"></div>`;
-            fragment.appendChild(s);
+            root.appendChild(s);
         }
-        root.appendChild(fragment);
 
         const slides = document.querySelectorAll('header, section');
 
         function move(idx) {
             if (idx < 0 || idx >= slides.length) return;
             current = idx;
-            wrapper.style.transform = `translate3d(0, -${idx * 100}vh, 0)`; // GPU Acceleration
-            preload(idx + 1); // Pre-fetch the next image
+            
+            // 1. Move the Page
+            wrapper.style.transform = `translate3d(0, -${idx * 100}vh, 0)`;
+            
+            // 2. Parallax Grain (Moves slower than the page)
+            grainLayer.style.transform = `translate3d(0, ${idx * 15}vh, 0)`;
+            
+            preload(idx + 1);
         }
 
-        // 3. QUALITY: Smart Preloading
         function preload(idx) {
             if (idx >= slides.length) return;
             const target = slides[idx].querySelector('.photo-container');
@@ -152,38 +147,36 @@
             }
         }
 
-        // 4. PERFORMANCE: Debounced Scroll & Key
-        let isLocked = false;
+        // Navigation
+        let isBusy = false;
         const handleNav = (dir) => {
-            if (isLocked) return;
-            isLocked = true;
-            if (auto) toggle();
+            if (isBusy) return;
+            isBusy = true;
             move(current + dir);
-            setTimeout(() => isLocked = false, 800);
+            setTimeout(() => isBusy = false, 1000);
         };
 
         window.addEventListener('wheel', e => handleNav(e.deltaY > 0 ? 1 : -1), { passive: true });
         window.addEventListener('keydown', e => {
-            if (e.key.includes("Arrow")) handleNav((e.key==="ArrowDown" || e.key==="ArrowRight") ? 1 : -1);
+            if (e.key.includes("Arrow")) handleNav((e.key === "ArrowDown" || e.key === "ArrowRight") ? 1 : -1);
         });
 
+        // Slideshow
         const btn = document.getElementById('slideshow-btn');
-        function toggle() {
-            auto = !auto;
-            btn.classList.toggle('active');
-            btn.innerText = auto ? "Stop Slideshow" : "Start Slideshow";
-            if (auto) timer = setInterval(() => move((current + 1) % slides.length), 5000);
-            else clearInterval(timer);
-        }
-        btn.addEventListener('click', toggle);
+        btn.addEventListener('click', () => {
+            if (timer) {
+                clearInterval(timer); timer = null;
+                btn.innerText = "START SLIDESHOW";
+                btn.classList.remove('active');
+            } else {
+                timer = setInterval(() => move((current + 1) % slides.length), 6000);
+                btn.innerText = "STOP SLIDESHOW";
+                btn.classList.add('active');
+            }
+        });
 
-        // Initial Preload
+        // Load first image immediately
         preload(1);
     </script>
 </body>
 </html>
-
-ULTRA HDR PORTFOLIO
-PHOTOGRAPHED BY CLARENCE • 2023–2025
-
-START SLIDESHOW
