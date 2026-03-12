@@ -7,7 +7,6 @@
     <style>
         :root { --bg: #000; --glass: rgba(15, 15, 15, 0.85); }
         
-        /* 1. GPU Acceleration: Tells the computer to use its graphics card for smooth motion */
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
@@ -15,19 +14,19 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 2. Film Grain Overlay (Optimized to not lag the CPU) */
+        /* 1. HIGH-VISIBILITY FILM GRAIN */
         .grain {
             position: fixed; top: -150%; left: -150%; width: 300%; height: 300%;
             background-image: url('https://upload.wikimedia.org');
-            opacity: 0.03; pointer-events: none; z-index: 9999;
-            animation: grain 8s steps(10) infinite;
-            will-change: transform; /* Helps GPU performance */
+            opacity: 0.08; pointer-events: none; z-index: 9999;
+            animation: grain 1.2s steps(6) infinite; will-change: transform;
+            background-size: 200px 200px; 
         }
-
         @keyframes grain {
             0%, 100% { transform:translate(0, 0); }
-            10% { transform:translate(-2%, -1%); }
-            50% { transform:translate(-5%, 5%); }
+            10% { transform:translate(-1%, -2%); }
+            50% { transform:translate(-3%, 2%); }
+            90% { transform:translate(-2%, 2%); }
         }
 
         /* Protection */
@@ -35,7 +34,7 @@
 
         #main-wrapper {
             transition: transform 1.6s cubic-bezier(0.25, 1, 0.3, 1);
-            will-change: transform; /* Prevents "jitter" during long scrolls */
+            will-change: transform;
         }
 
         header, section {
@@ -54,7 +53,6 @@
             max-width: 100%; max-height: 100%; border-radius: 1px;
             box-shadow: 0 80px 160px rgba(0,0,0,1);
             -webkit-user-drag: none; pointer-events: none;
-            /* Animation optimized for stability */
             animation: cinematicFloat 22s ease-in-out infinite;
             will-change: transform, scale;
         }
@@ -64,6 +62,7 @@
             50% { transform: scale(1.06) translateY(-15px); }
         }
 
+        /* Controls: Slideshow Button */
         #slideshow-btn {
             position: fixed; bottom: 45px; right: 45px; z-index: 10000;
             background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
@@ -72,9 +71,26 @@
             cursor: pointer; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
-
         #slideshow-btn:active { transform: scale(0.92); }
         #slideshow-btn.active { background: #fff; color: #000; }
+
+        /* Controls: Minimal Arrows (Desktop Only) */
+        .controls-hint {
+            position: fixed; bottom: 45px; left: 45px; z-index: 10000;
+            display: none; flex-direction: column; align-items: center; gap: 4px;
+            opacity: 0.3; transition: opacity 0.5s ease;
+        }
+        @media (min-width: 801px) { .controls-hint { display: flex; } }
+        .key-row { display: flex; gap: 4px; }
+        .key-box {
+            width: 18px; height: 18px; border: 1px solid rgba(255,255,255,0.4); border-radius: 3px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .key-box::after { content: ''; display: block; border: solid white; border-width: 0 1px 1px 0; padding: 2px; }
+        .key-up::after { transform: rotate(-135deg); }
+        .key-down::after { transform: rotate(45deg); }
+        .key-left::after { transform: rotate(135deg); }
+        .key-right::after { transform: rotate(-45deg); }
 
         @media (max-width: 768px) {
             .photo-container { width: 92%; height: 75vh; }
@@ -94,6 +110,16 @@
         <div id="gallery-root"></div>
     </div>
 
+    <!-- Interface Elements -->
+    <div class="controls-hint">
+        <div class="key-row"><div class="key-box key-up"></div></div>
+        <div class="key-row">
+            <div class="key-box key-left"></div>
+            <div class="key-box key-down"></div>
+            <div class="key-box key-right"></div>
+        </div>
+    </div>
+
     <button id="slideshow-btn">Start Slideshow</button>
 
     <script>
@@ -104,7 +130,7 @@
         let autoPlayActive = false;
         let slideTimer;
 
-        // 3. Crash Prevention: Generate sections but keep images "Empty" until needed
+        // Optimized Memory Loading
         for (let i = 1; i <= totalImages; i++) {
             const sec = document.createElement('section');
             sec.setAttribute('data-id', i);
@@ -121,26 +147,19 @@
             wrapper.style.transform = `translateY(-${index * 100}vh)`;
         }
 
-        // 4. Memory Management: Load images only when they are close to appearing
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const id = entry.target.getAttribute('data-id');
                 const container = entry.target.querySelector('.photo-container');
-                
-                if (entry.isIntersecting) {
-                    if (!container.innerHTML) {
-                        container.innerHTML = `<img src="img-${id}.avif" loading="lazy">`;
-                    }
-                } else {
-                    // Optional: Clear memory of distant images (Useful for older phones)
-                    // container.innerHTML = ""; 
+                if (entry.isIntersecting && !container.innerHTML) {
+                    container.innerHTML = `<img src="img-${id}.avif" loading="lazy">`;
                 }
             });
         }, { rootMargin: "100% 0px", threshold: 0.01 });
 
         sections.forEach(sec => observer.observe(sec));
 
-        // Keyboard & Controls
+        // Navigation Controls
         window.addEventListener('keydown', (e) => {
             if (autoPlayActive) toggleSlideshow();
             if (e.key === "ArrowDown" || e.key === "ArrowRight") goToSlide(currentIdx + 1);
@@ -162,7 +181,6 @@
         }
         btn.addEventListener('click', toggleSlideshow);
 
-        // Prevent Scroll Crash
         let lastScroll = 0;
         window.addEventListener('wheel', (e) => {
             const now = Date.now();
