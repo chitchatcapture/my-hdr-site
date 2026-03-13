@@ -6,7 +6,7 @@
     <title>ULTRA HDR • CLARENCE</title>
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --glass: rgba(12, 12, 12, 0.75); --border: rgba(255, 255, 255, 0.1); }
+        :root { --bg: #000; --glass: rgba(10, 10, 10, 0.7); --border: rgba(255, 255, 255, 0.1); }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
@@ -14,7 +14,7 @@
             height: 100%; width: 100%; overflow: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        /* 1. MAIN VIEWPORT (10% PEEK) */
+        /* 1. MAIN VERTICAL VIEWPORT */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
             scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -33,7 +33,6 @@
         .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
         .hdr-note { color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 12px; }
 
-        /* PREMIUM HDR TRANSITIONS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
             transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), filter 1.8s cubic-bezier(0.2, 1, 0.2, 1);
@@ -42,7 +41,7 @@
         .active .photo-container { filter: brightness(1.1) blur(0px); transform: scale(1); }
         img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 150px rgba(0,0,0,1); }
 
-        /* 2. UNLOCKED iOS FILMSTRIP */
+        /* 2. UNLOCKED FREE-FLOW LIQUID GLASS STRIP */
         #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 150px; z-index: 10001; }
         
         #thumb-slider {
@@ -54,18 +53,19 @@
             border-radius: 24px; border: 1px solid var(--border);
             opacity: 0; transition: all 0.6s cubic-bezier(0.15, 1, 0.3, 1);
             overflow-x: auto; scrollbar-width: none; pointer-events: none;
+            /* Scroll snap removed for free-flow movement */
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
         #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; }
 
-        /* Dynamic Spacers: Fixes the "Edge Barrier" for first and last images */
-        .slider-rail { display: flex; align-items: center; gap: 12px; padding: 0 50%; }
+        .slider-rail { display: flex; align-items: center; gap: 12px; height: 100%; padding: 0 20px; }
 
         .thumb {
             flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
-            opacity: 0.35; filter: brightness(0.75); cursor: pointer; will-change: flex, height;
+            opacity: 0.35; filter: brightness(0.75); cursor: pointer;
         }
+        /* Thumbnail pops only when the main scroll reaches the photo */
         .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
         #slideshow-btn {
@@ -115,7 +115,7 @@
         }
         root.appendChild(frag);
 
-        // 2. Build Unlocked Scrubber
+        // 2. Build Unlocked Rail
         for (let i = 1; i <= total; i++) {
             const t = document.createElement('div');
             t.className = 'thumb';
@@ -131,7 +131,6 @@
         const sync = () => {
             const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
             
-            // Sync: Vertical Scroll -> Slider Focus
             items.forEach((item, i) => {
                 const itemCenter = item.offsetTop + (item.offsetHeight / 2);
                 if (Math.abs(mainCenter - itemCenter) < 250) {
@@ -140,6 +139,7 @@
                         item.classList.add('active');
                         thumbs[i].classList.add('active-thumb');
                         
+                        // Automatically slide the rail to reveal the active thumb
                         if (!slider.matches(':hover')) {
                             thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         }
@@ -154,23 +154,6 @@
                     thumbs[i].classList.remove('active-thumb');
                 }
             });
-
-            // Sync: Horizontal Scrub -> Instant Main View
-            if (slider.matches(':hover')) {
-                const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
-                let closestIdx = 0;
-                let minDist = Infinity;
-
-                thumbs.forEach((t, i) => {
-                    const tCenter = t.offsetLeft + (t.offsetWidth / 2);
-                    const d = Math.abs(sliderCenter - tCenter);
-                    if (d < minDist) { minDist = d; closestIdx = i; }
-                });
-                
-                if (lastIdx !== closestIdx) {
-                    items[closestIdx].scrollIntoView({ behavior: 'auto' });
-                }
-            }
             requestAnimationFrame(sync);
         };
         requestAnimationFrame(sync);
