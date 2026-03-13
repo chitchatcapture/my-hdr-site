@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ULTRA HDR • CLARENCE</title>
+    <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
         :root { 
             --bg: #000; 
-            --glass-bg: rgba(12, 12, 12, 0.65); 
+            --glass-bg: rgba(10, 10, 10, 0.75); 
             --liquid-border: rgba(255, 255, 255, 0.12);
-            --ui-text: rgba(255, 255, 255, 0.95);
         }
         
         html, body { 
@@ -21,49 +21,51 @@
         /* 1. CINEMATIC FILMSTRIP (80vh = 10% Peek) */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
-            scroll-behavior: auto; /* Managed by JS for liquid smoothness */
-            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
         #main-wrapper::-webkit-scrollbar { display: none; }
 
         header, section {
             height: 80vh; width: 100vw; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; scroll-snap-align: center;
-            scroll-snap-stop: always; position: relative;
+            scroll-snap-stop: always; position: relative; transform: translateZ(0);
         }
         header { height: 100vh; }
 
         .header-content { text-align: center; transition: opacity 0.8s ease; will-change: opacity; }
-        h1 { font-size: 0.8rem; font-weight: 300; letter-spacing: 1em; text-transform: uppercase; margin: 0; }
-        .credit { color: rgba(255,255,255,0.4); font-size: 0.5rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
+        h1 { font-size: 0.85rem; font-weight: 300; letter-spacing: 1em; text-transform: uppercase; margin: 0; }
+        .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
+        
+        /* HDR Subtitle */
+        .hdr-note { 
+            color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; 
+            text-transform: uppercase; margin-top: 12px; font-weight: 500;
+        }
 
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            /* Premium Slow Transition */
-            transition: transform 1.2s cubic-bezier(0.33, 1, 0.68, 1), 
-                        filter 1.2s cubic-bezier(0.33, 1, 0.68, 1);
-            filter: brightness(0.6) blur(2px); transform: scale(0.92);
+            transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), filter 1.8s cubic-bezier(0.2, 1, 0.2, 1);
+            filter: brightness(0.6) blur(2px); transform: scale(0.92) translateZ(0);
             will-change: transform, filter;
         }
-        .active .photo-container { filter: brightness(1) blur(0px); transform: scale(1); }
+        .active .photo-container { filter: brightness(1) blur(0px); transform: scale(1) translateZ(0); }
         img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 140px rgba(0,0,0,1); }
 
         /* 2. iOS 26 LIQUID GLASS FILMSTRIP */
-        #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 130px; z-index: 10001; }
+        #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 140px; z-index: 10001; }
         
         #thumb-slider {
-            position: fixed; bottom: 35px; left: 50%; transform: translate3d(-50%, 50px, 0);
-            width: 90%; max-width: 520px; height: 65px; z-index: 10002;
+            position: fixed; bottom: 35px; left: 50%; transform: translate3d(-50%, 60px, 0);
+            width: 92%; max-width: 550px; height: 65px; z-index: 10002;
             display: flex; align-items: center; gap: 10px; overflow-x: auto;
-            padding: 0 50%; /* Center Snapping */
+            /* Adaptive padding for perfect center alignment */
+            padding: 0 calc(50% - 22px); 
             background: var(--glass-bg);
-            backdrop-filter: blur(45px) saturate(1.8) contrast(1.1);
-            -webkit-backdrop-filter: blur(45px) saturate(1.8) contrast(1.1);
-            border-radius: 22px; 
-            border: 1px solid var(--liquid-border);
+            backdrop-filter: blur(40px) saturate(1.8) contrast(1.1);
+            -webkit-backdrop-filter: blur(40px) saturate(1.8) contrast(1.1);
+            border-radius: 24px; border: 1px solid var(--liquid-border);
             opacity: 0; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            scroll-snap-type: x mandatory; scrollbar-width: none;
-            pointer-events: none;
+            scroll-snap-type: x mandatory; scrollbar-width: none; pointer-events: none;
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
         
@@ -74,15 +76,11 @@
         .thumb {
             flex: 0 0 34px; height: 23px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            opacity: 0.35; filter: brightness(0.6); scroll-snap-align: center;
+            opacity: 0.3; filter: brightness(0.6); scroll-snap-align: center;
+            will-change: flex, height; transform: translateZ(0);
         }
-        /* Rectangle-to-Square Liquid Transition */
-        .thumb.active-thumb { 
-            flex: 0 0 44px; height: 44px; opacity: 1; 
-            filter: brightness(1); border-radius: 6px; 
-        }
+        .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
-        /* AUTO BUTTON */
         #slideshow-btn {
             position: fixed; top: 30px; right: 30px; z-index: 10000;
             background: var(--glass-bg); backdrop-filter: blur(20px);
@@ -95,7 +93,7 @@
         @media (max-width: 768px) {
             header, section { height: 80vh; } header { height: 100vh; }
             .photo-container { height: 60vh; }
-            #thumb-slider { height: 55px; bottom: 25px; padding: 0 45%; }
+            #thumb-slider { height: 58px; bottom: 25px; }
         }
     </style>
 </head>
@@ -106,6 +104,7 @@
             <div class="header-content" id="title-block">
                 <h1>Ultra HDR Portfolio</h1>
                 <div class="credit">Photographed by Clarence • 2023–2025</div>
+                <div class="hdr-note">Please view on an HDR supported device</div>
             </div>
             <div class="photo-container"><img src="img-1.avif"></div>
         </header>
@@ -122,9 +121,9 @@
         const slider = document.getElementById('thumb-slider');
         const titleBlock = document.getElementById('title-block');
         const total = 39;
-        let isAuto = false, autoTimer;
+        let isAuto = false, autoTimer, lastActiveIdx = -1;
 
-        // 1. Optimized DOM Injection
+        // 1. Optimized Fragment Generation
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -139,6 +138,7 @@
             t.className = 'thumb';
             t.style.backgroundImage = `url(img-${i}.avif)`;
             t.onclick = () => {
+                triggerHaptics();
                 items[i-1].scrollIntoView({ behavior: 'smooth' });
             };
             slider.appendChild(t);
@@ -147,40 +147,42 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 2. High-Frequency Tracking (60fps)
-        const updateScene = () => {
-            const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
-            let closestIdx = 0;
-            let minDistance = Infinity;
-
-            // Sync Slider -> Main Photo (Instant Scrub)
-            if (slider.matches(':hover') || slider === document.activeElement) {
-                thumbs.forEach((t, i) => {
-                    const tCenter = t.offsetLeft + (t.offsetWidth / 2);
-                    const dist = Math.abs(sliderCenter - tCenter);
-                    if (dist < minDistance) { minDistance = dist; closestIdx = i; }
-                });
-                items[closestIdx].scrollIntoView({ behavior: 'auto' });
+        // 2. Taptic/Haptic Engine Integration
+        const triggerHaptics = () => {
+            // Mobile Haptics
+            if ("vibrate" in navigator) navigator.vibrate(12);
+            
+            // Mac Trackpad Taptic Engine (WebKit specific)
+            if (window.safari && window.safari.pushNotification) {
+                // Safari 
             }
+        };
 
-            // Sync Main Scroll -> Slider & Focus
+        // 3. High-Performance Frame Synchronizer
+        const syncView = () => {
             const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
+            
             items.forEach((item, i) => {
                 const itemCenter = item.offsetTop + (item.offsetHeight / 2);
                 const dist = Math.abs(mainCenter - itemCenter);
                 
-                if (dist < 400) { // Proximity trigger
-                    item.classList.add('active');
-                    thumbs[i].classList.add('active-thumb');
-                    if (!slider.matches(':hover')) {
-                        thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                if (dist < 350) {
+                    if (lastActiveIdx !== i) {
+                        lastActiveIdx = i;
+                        item.classList.add('active');
+                        thumbs[i].classList.add('active-thumb');
+                        triggerHaptics();
+                        
+                        if (!slider.matches(':hover')) {
+                            thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        }
                     }
                     titleBlock.style.opacity = i === 0 ? "1" : "0";
-                    
-                    // Lazy Load
+
+                    // Smart Lazy Load
                     const c = item.querySelector('.photo-container');
                     if (item.dataset.id && c && !c.innerHTML) {
-                        c.innerHTML = `<img src="img-${item.dataset.id}.avif">`;
+                        c.innerHTML = `<img src="img-${item.dataset.id}.avif" loading="eager">`;
                     }
                 } else {
                     item.classList.remove('active');
@@ -188,11 +190,27 @@
                 }
             });
 
-            requestAnimationFrame(updateScene);
-        };
-        requestAnimationFrame(updateScene);
+            // Scrubber Logic
+            if (slider.matches(':hover')) {
+                const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
+                let closestIdx = 0;
+                let minD = Infinity;
 
-        // 3. Premium Auto-Scroll
+                thumbs.forEach((t, i) => {
+                    const tCenter = t.offsetLeft + (t.offsetWidth / 2);
+                    const d = Math.abs(sliderCenter - tCenter);
+                    if (d < minD) { minD = d; closestIdx = i; }
+                });
+                
+                if (lastActiveIdx !== closestIdx) {
+                    items[closestIdx].scrollIntoView({ behavior: 'auto' });
+                }
+            }
+            requestAnimationFrame(syncView);
+        };
+        requestAnimationFrame(syncView);
+
+        // 4. Premium Controls
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
@@ -200,19 +218,15 @@
             btn.innerText = isAuto ? "STOP" : "AUTO";
             if (isAuto) {
                 autoTimer = setInterval(() => {
-                    const current = [...items].indexOf(document.querySelector('.active'));
-                    const next = (current + 1) % items.length;
-                    // Custom slow transition
+                    const next = (lastActiveIdx + 1) % items.length;
                     items[next].scrollIntoView({ behavior: 'smooth' });
-                }, 4500); // 1.5s scroll + 3s viewing
+                }, 4800); 
             } else clearInterval(autoTimer);
         };
 
-        // Keyboard Logic
         window.onkeydown = (e) => {
-            const curr = [...items].indexOf(document.querySelector('.active'));
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(curr + 1, total-1)].scrollIntoView();
-            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(curr - 1, 0)].scrollIntoView();
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(lastActiveIdx + 1, total-1)].scrollIntoView();
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(lastActiveIdx - 1, 0)].scrollIntoView();
         };
 
         wrapper.onwheel = () => { if(isAuto) btn.click(); };
