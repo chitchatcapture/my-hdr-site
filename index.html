@@ -21,7 +21,7 @@
         /* 1. CINEMATIC SCROLL CONTAINER */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
-            scroll-behavior: smooth; /* Essential for the 4s natural cycle */
+            scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
         #main-wrapper::-webkit-scrollbar { display: none; }
@@ -44,17 +44,14 @@
         /* 2. PREMIUM HDR DYNAMICS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            /* Slower 1.8s transition for natural 'Apple' feel */
             transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), 
-                        filter 1.8s cubic-bezier(0.2, 1, 0.2, 1),
-                        opacity 1.8s ease;
+                        filter 1.8s cubic-bezier(0.2, 1, 0.2, 1);
             filter: brightness(0.6) blur(2px); transform: scale(0.92);
             will-change: transform, filter;
         }
         
         .active .photo-container { 
             filter: brightness(1.1) blur(0px); 
-            opacity: 1;
             transform: scale(1); 
         }
         
@@ -64,23 +61,28 @@
             object-fit: contain;
         }
 
-        /* 3. iOS FILMSTRIP (PATCHED & SMOOTH) */
-        #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 140px; z-index: 10001; }
+        /* 3. FIXED iOS FILMSTRIP - NO MORE BARRIERS */
+        #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 150px; z-index: 10001; }
         
         #thumb-slider {
-            position: fixed; bottom: 30px; left: 50%; transform: translate3d(-50%, 60px, 0);
-            width: 90%; max-width: 500px; height: 65px; z-index: 10002;
-            display: flex; align-items: center; gap: 10px; overflow-x: auto;
-            padding: 0 calc(50% - 22px); 
-            background: var(--glass); backdrop-filter: blur(40px) saturate(1.8);
-            -webkit-backdrop-filter: blur(40px) saturate(1.8);
-            border-radius: 22px; border: 1px solid var(--border);
+            position: fixed; bottom: 30px; left: 50%; transform: translate3d(-50%, 80px, 0);
+            width: 92%; max-width: 550px; height: 70px; z-index: 10002;
+            display: flex; align-items: center; gap: 12px; overflow-x: auto;
+            /* Extra large padding ensures every photo can reach the center-lock */
+            padding-left: calc(50vw - 22px);
+            padding-right: calc(50vw - 22px);
+            background: var(--glass); backdrop-filter: blur(45px) saturate(1.8);
+            -webkit-backdrop-filter: blur(45px) saturate(1.8);
+            border-radius: 24px; border: 1px solid var(--border);
             opacity: 0; transition: all 0.6s cubic-bezier(0.15, 1, 0.3, 1);
             scroll-snap-type: x mandatory; scrollbar-width: none;
             pointer-events: none;
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
-        #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; }
+        
+        #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { 
+            opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; 
+        }
 
         .thumb {
             flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
@@ -124,7 +126,7 @@
         const total = 39;
         let isAuto = false, autoTimer, lastActiveIdx = 0;
 
-        // 1. Build DOM
+        // 1. Build DOM Elements
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -145,10 +147,11 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 2. RENDERING ENGINE: High-Speed Sync
+        // 2. CORE SYNC ENGINE (60FPS Frame Tracker)
         const updateFrame = () => {
             const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
             
+            // Sync: Main View -> Slider & HDR Focus
             items.forEach((item, i) => {
                 const itemCenter = item.offsetTop + (item.offsetHeight / 2);
                 const dist = Math.abs(mainCenter - itemCenter);
@@ -159,14 +162,14 @@
                         item.classList.add('active');
                         thumbs[i].classList.add('active-thumb');
                         
-                        // Sync slider only if not being scrubbed
+                        // Only sync slider if user isn't scrubbing it
                         if (!slider.matches(':hover')) {
                             thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         }
                         titleBlock.style.opacity = i === 0 ? "1" : "0";
                     }
 
-                    // Lazy Load
+                    // Adaptive Lazy Load
                     const c = item.querySelector('.photo-container');
                     if (item.dataset.id && c && !c.innerHTML) {
                         c.innerHTML = `<img src="img-${item.dataset.id}.avif">`;
@@ -177,7 +180,7 @@
                 }
             });
 
-            // Scrubber Logic: Slider -> Main View
+            // Sync: Slider Scrubbing -> Main View
             if (slider.matches(':hover')) {
                 const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
                 let closestIdx = 0;
@@ -198,7 +201,7 @@
         };
         requestAnimationFrame(updateFrame);
 
-        // 3. AUTO: 4s Cycle with 1.8s Natural Scroll
+        // 3. AUTO SLIDESHOW: 4s Cycle with 1.8s Natural Scroll
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
@@ -217,6 +220,7 @@
             if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(lastActiveIdx - 1, 0)].scrollIntoView();
         };
 
+        // UI Auto-Stop
         wrapper.onwheel = () => { if(isAuto) btn.click(); };
         wrapper.ontouchstart = () => { if(isAuto) btn.click(); };
     </script>
