@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ULTRA HDR • CLARENCE</title>
+    <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --glass: rgba(10, 10, 10, 0.75); --border: rgba(255, 255, 255, 0.12); }
+        :root { 
+            --bg: #000; 
+            --glass: rgba(10, 10, 10, 0.7); 
+            --border: rgba(255, 255, 255, 0.1);
+        }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
@@ -13,10 +18,10 @@
             height: 100%; width: 100%; overflow: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        /* 1. SCROLL CONTAINER */
+        /* 1. CINEMATIC SCROLL CONTAINER */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
-            scroll-behavior: auto; /* Instant for scrubbing */
+            scroll-behavior: smooth; /* Essential for the 4s natural cycle */
             -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
         #main-wrapper::-webkit-scrollbar { display: none; }
@@ -26,55 +31,70 @@
             justify-content: center; align-items: center; scroll-snap-align: center;
             scroll-snap-stop: always; position: relative;
         }
-        header { height: 100vh; justify-content: center; }
+        header { height: 100vh; }
 
         .header-content { 
-            text-align: center; transition: opacity 0.6s ease; 
-            margin-bottom: 80px; /* Moved further from image as requested */
+            text-align: center; transition: opacity 0.8s ease; 
+            margin-bottom: 80px; will-change: opacity;
         }
         h1 { font-size: 0.85rem; font-weight: 300; letter-spacing: 1em; text-transform: uppercase; margin: 0; }
         .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
         .hdr-note { color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 12px; }
 
+        /* 2. PREMIUM HDR DYNAMICS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            transition: transform 1.2s cubic-bezier(0.2, 1, 0.2, 1), filter 1.2s ease;
+            /* Slower 1.8s transition for natural 'Apple' feel */
+            transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), 
+                        filter 1.8s cubic-bezier(0.2, 1, 0.2, 1),
+                        opacity 1.8s ease;
             filter: brightness(0.6) blur(2px); transform: scale(0.92);
+            will-change: transform, filter;
         }
-        .active .photo-container { filter: brightness(1) blur(0px); transform: scale(1); }
-        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 140px rgba(0,0,0,1); }
+        
+        .active .photo-container { 
+            filter: brightness(1.1) blur(0px); 
+            opacity: 1;
+            transform: scale(1); 
+        }
+        
+        img { 
+            max-width: 100%; max-height: 100%; border-radius: 2px; 
+            box-shadow: 0 40px 150px rgba(0,0,0,1); 
+            object-fit: contain;
+        }
 
-        /* 2. iOS 26 LIQUID GLASS FILMSTRIP (CENTER-LOCKED) */
+        /* 3. iOS FILMSTRIP (PATCHED & SMOOTH) */
         #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 140px; z-index: 10001; }
         
         #thumb-slider {
-            position: fixed; bottom: 35px; left: 50%; transform: translate3d(-50%, 60px, 0);
-            width: 92%; max-width: 550px; height: 65px; z-index: 10002;
+            position: fixed; bottom: 30px; left: 50%; transform: translate3d(-50%, 60px, 0);
+            width: 90%; max-width: 500px; height: 65px; z-index: 10002;
             display: flex; align-items: center; gap: 10px; overflow-x: auto;
-            /* Adaptive padding for edge access */
             padding: 0 calc(50% - 22px); 
             background: var(--glass); backdrop-filter: blur(40px) saturate(1.8);
             -webkit-backdrop-filter: blur(40px) saturate(1.8);
-            border-radius: 24px; border: 1px solid var(--border);
-            opacity: 0; transition: all 0.5s cubic-bezier(0.15, 1, 0.3, 1);
+            border-radius: 22px; border: 1px solid var(--border);
+            opacity: 0; transition: all 0.6s cubic-bezier(0.15, 1, 0.3, 1);
             scroll-snap-type: x mandatory; scrollbar-width: none;
-            touch-action: pan-x; /* Prevents back-swipe gesture */
+            pointer-events: none;
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
-        #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); }
+        #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; }
 
         .thumb {
-            flex: 0 0 34px; height: 23px; background-size: cover; background-position: center;
+            flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
-            opacity: 0.3; filter: brightness(0.6); scroll-snap-align: center;
+            opacity: 0.35; filter: brightness(0.7); scroll-snap-align: center;
+            will-change: flex, height;
         }
         .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
         #slideshow-btn {
             position: fixed; top: 30px; right: 30px; z-index: 10000;
             background: var(--glass); border: 1px solid var(--border);
-            color: #fff; padding: 10px 22px; border-radius: 40px; font-size: 0.6rem;
-            letter-spacing: 0.3em; cursor: pointer;
+            color: #fff; padding: 12px 24px; border-radius: 40px; font-size: 0.6rem;
+            letter-spacing: 0.3em; cursor: pointer; transition: 0.4s;
         }
     </style>
 </head>
@@ -102,27 +122,9 @@
         const slider = document.getElementById('thumb-slider');
         const titleBlock = document.getElementById('title-block');
         const total = 39;
-        let isAuto = false, autoTimer, lastActiveIdx = -1;
+        let isAuto = false, autoTimer, lastActiveIdx = 0;
 
-        // 1. Audio Haptic Engine (For Mac/Mobile Click Sensation)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const triggerHaptic = () => {
-            if ("vibrate" in navigator) navigator.vibrate(10);
-            
-            // Web Audio Click (Feels like a Taptic Engine on Mac)
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(60, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.05);
-        };
-
-        // 2. DOM Injection
+        // 1. Build DOM
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -143,57 +145,60 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 3. Dual-Sync Logic (Instant display on scrub)
-        const syncScene = () => {
-            const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
+        // 2. RENDERING ENGINE: High-Speed Sync
+        const updateFrame = () => {
             const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
+            
+            items.forEach((item, i) => {
+                const itemCenter = item.offsetTop + (item.offsetHeight / 2);
+                const dist = Math.abs(mainCenter - itemCenter);
+                
+                if (dist < 300) {
+                    if (lastActiveIdx !== i) {
+                        lastActiveIdx = i;
+                        item.classList.add('active');
+                        thumbs[i].classList.add('active-thumb');
+                        
+                        // Sync slider only if not being scrubbed
+                        if (!slider.matches(':hover')) {
+                            thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        }
+                        titleBlock.style.opacity = i === 0 ? "1" : "0";
+                    }
 
-            // If user is scrubbing the slider
-            if (slider.matches(':hover') || slider === document.activeElement) {
+                    // Lazy Load
+                    const c = item.querySelector('.photo-container');
+                    if (item.dataset.id && c && !c.innerHTML) {
+                        c.innerHTML = `<img src="img-${item.dataset.id}.avif">`;
+                    }
+                } else {
+                    item.classList.remove('active');
+                    thumbs[i].classList.remove('active-thumb');
+                }
+            });
+
+            // Scrubber Logic: Slider -> Main View
+            if (slider.matches(':hover')) {
+                const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
                 let closestIdx = 0;
-                let minD = Infinity;
+                let minSliderDist = Infinity;
+
                 thumbs.forEach((t, i) => {
                     const tCenter = t.offsetLeft + (t.offsetWidth / 2);
                     const d = Math.abs(sliderCenter - tCenter);
-                    if (d < minD) { minD = d; closestIdx = i; }
+                    if (d < minSliderDist) { minSliderDist = d; closestIdx = i; }
                 });
-
+                
                 if (lastActiveIdx !== closestIdx) {
-                    lastActiveIdx = closestIdx;
-                    triggerHaptic();
                     items[closestIdx].scrollIntoView({ behavior: 'auto' });
-                    updateActiveState(closestIdx);
                 }
-            } else {
-                // If user is scrolling the main view
-                items.forEach((item, i) => {
-                    const itemCenter = item.offsetTop + (item.offsetHeight / 2);
-                    const d = Math.abs(mainCenter - itemCenter);
-                    if (d < 200 && lastActiveIdx !== i) {
-                        lastActiveIdx = i;
-                        triggerHaptic();
-                        updateActiveState(i);
-                        thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                    }
-                });
             }
-            requestAnimationFrame(syncScene);
+
+            requestAnimationFrame(updateFrame);
         };
+        requestAnimationFrame(updateFrame);
 
-        const updateActiveState = (idx) => {
-            items.forEach((it, i) => it.classList.toggle('active', i === idx));
-            thumbs.forEach((th, i) => th.classList.toggle('active-thumb', i === idx));
-            titleBlock.style.opacity = idx === 0 ? "1" : "0";
-            
-            const container = items[idx].querySelector('.photo-container');
-            if (items[idx].dataset.id && container && !container.innerHTML) {
-                container.innerHTML = `<img src="img-${items[idx].dataset.id}.avif">`;
-            }
-        };
-
-        requestAnimationFrame(syncScene);
-
-        // 4. Auto-Slideshow (Smooth Slow Transition)
+        // 3. AUTO: 4s Cycle with 1.8s Natural Scroll
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
@@ -203,13 +208,17 @@
                 autoTimer = setInterval(() => {
                     const next = (lastActiveIdx + 1) % items.length;
                     items[next].scrollIntoView({ behavior: 'smooth' });
-                }, 4800);
+                }, 4000); 
             } else clearInterval(autoTimer);
         };
 
-        // Resume Audio Context on interaction (Browser requirement)
-        window.addEventListener('mousedown', () => audioCtx.resume());
-        window.addEventListener('touchstart', () => audioCtx.resume());
+        window.onkeydown = (e) => {
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(lastActiveIdx + 1, total-1)].scrollIntoView();
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(lastActiveIdx - 1, 0)].scrollIntoView();
+        };
+
+        wrapper.onwheel = () => { if(isAuto) btn.click(); };
+        wrapper.ontouchstart = () => { if(isAuto) btn.click(); };
     </script>
 </body>
 </html>
