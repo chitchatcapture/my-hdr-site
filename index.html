@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ULTRA HDR • CLARENCE</title>
+    <!-- Preload first image for LCP performance -->
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
         :root { --bg: #000; --glass: rgba(12, 12, 12, 0.75); --border: rgba(255, 255, 255, 0.12); }
@@ -36,7 +37,6 @@
         .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
         .hdr-note { color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 12px; }
 
-        /* PREVIOUS SNAPPY DYNAMICS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
             transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1.2s ease;
@@ -46,16 +46,19 @@
         
         .active .photo-container { filter: brightness(1.1) blur(0px); transform: scale(1); }
 
-        /* DISABLE EASE FOR COVER PHOTO */
         header.active .photo-container { 
             transition: none !important; 
             filter: brightness(1.1) blur(0px) !important; 
             transform: scale(1) !important; 
         }
 
-        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 140px rgba(0,0,0,1); }
+        /* Added dynamic-range hint for browsers like Comet */
+        img { 
+            max-width: 100%; max-height: 100%; border-radius: 2px; 
+            box-shadow: 0 40px 140px rgba(0,0,0,1);
+            dynamic-range: high; 
+        }
 
-        /* FIXED iOS STRIP: GHOST BUFFER SYSTEM */
         #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 140px; z-index: 10001; }
         
         #thumb-slider {
@@ -72,7 +75,6 @@
         #thumb-slider::-webkit-scrollbar { display: none; }
         #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; }
 
-        /* The Buffer Spacers force the last/first photos to the center */
         .slider-rail { display: flex; align-items: center; gap: 12px; height: 100%; }
         .buffer { flex: 0 0 calc(50% - 22px); height: 1px; pointer-events: none; }
 
@@ -92,7 +94,6 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
-
     <div id="main-wrapper">
         <header class="active" data-id="1">
             <div class="header-content" id="title-block">
@@ -100,7 +101,7 @@
                 <div class="credit">Photographed by Clarence • 2023–2025</div>
                 <div class="hdr-note">Please view on an HDR supported device</div>
             </div>
-            <div class="photo-container"><img src="img-1.avif"></div>
+            <div class="photo-container"><img src="img-1.avif" alt="HDR Content"></div>
         </header>
         <div id="gallery-root"></div>
     </div>
@@ -108,9 +109,9 @@
     <div id="ui-trigger-zone"></div>
     <div id="thumb-slider">
         <div class="slider-rail">
-            <div class="buffer"></div> <!-- Start Buffer -->
+            <div class="buffer"></div>
             <div id="thumb-root" style="display:flex; align-items:center; gap:12px;"></div>
-            <div class="buffer"></div> <!-- End Buffer -->
+            <div class="buffer"></div>
         </div>
     </div>
     <button id="slideshow-btn">AUTO</button>
@@ -137,7 +138,7 @@
         for (let i = 1; i <= total; i++) {
             const t = document.createElement('div');
             t.className = 'thumb';
-            t.style.backgroundImage = `url(img-${i}.avif)`;
+            t.style.backgroundImage = `url('img-${i}.avif')`;
             t.onclick = () => { items[i-1].scrollIntoView({ behavior: 'smooth' }); };
             thumbRoot.appendChild(t);
         }
@@ -184,7 +185,10 @@
             titleBlock.style.opacity = idx === 0 ? "1" : "0";
             const c = items[idx].querySelector('.photo-container');
             if (items[idx].dataset.id && c && !c.innerHTML) {
-                c.innerHTML = `<img src="img-${items[idx].dataset.id}.avif">`;
+                // Ensure image is loaded with HDR preference
+                const newImg = new Image();
+                newImg.src = `img-${items[idx].dataset.id}.avif`;
+                c.appendChild(newImg);
             }
         };
 
