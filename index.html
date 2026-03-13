@@ -6,7 +6,7 @@
     <title>ULTRA HDR • CLARENCE</title>
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --glass: rgba(10, 10, 10, 0.7); --border: rgba(255, 255, 255, 0.1); }
+        :root { --bg: #000; --glass: rgba(12, 12, 12, 0.75); --border: rgba(255, 255, 255, 0.1); }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
@@ -14,7 +14,7 @@
             height: 100%; width: 100%; overflow: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        /* 1. MAIN VERTICAL VIEWPORT */
+        /* 1. MAIN VIEWPORT (10% PEEK) */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
             scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -33,10 +33,11 @@
         .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
         .hdr-note { color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 12px; }
 
+        /* PREMIUM HDR TRANSITIONS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
             transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), filter 1.8s cubic-bezier(0.2, 1, 0.2, 1);
-            filter: brightness(0.6) blur(2px); transform: scale(0.92); will-change: transform, filter;
+            filter: brightness(0.65) blur(2px); transform: scale(0.92); will-change: transform, filter;
         }
         .active .photo-container { filter: brightness(1.1) blur(0px); transform: scale(1); }
         img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 150px rgba(0,0,0,1); }
@@ -46,24 +47,24 @@
         
         #thumb-slider {
             position: fixed; bottom: 30px; left: 50%; transform: translate3d(-50%, 80px, 0);
-            width: 95%; max-width: 600px; height: 70px; z-index: 10002;
-            display: flex; align-items: center; gap: 12px; overflow-x: auto;
+            width: 92%; max-width: 550px; height: 70px; z-index: 10002;
+            display: flex; align-items: center; 
             background: var(--glass); backdrop-filter: blur(45px) saturate(1.8);
             -webkit-backdrop-filter: blur(45px) saturate(1.8);
             border-radius: 24px; border: 1px solid var(--border);
             opacity: 0; transition: all 0.6s cubic-bezier(0.15, 1, 0.3, 1);
-            scrollbar-width: none; pointer-events: none;
+            overflow-x: auto; scrollbar-width: none; pointer-events: none;
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
         #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; }
 
-        /* Buffer spacers to allow first/last thumb to reach center */
-        .slider-spacer { flex: 0 0 48%; pointer-events: none; }
+        /* Dynamic Spacers: Fixes the "Edge Barrier" for first and last images */
+        .slider-rail { display: flex; align-items: center; gap: 12px; padding: 0 50%; }
 
         .thumb {
             flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
-            opacity: 0.35; filter: brightness(0.7); cursor: pointer; will-change: flex, height;
+            opacity: 0.35; filter: brightness(0.75); cursor: pointer; will-change: flex, height;
         }
         .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
@@ -91,9 +92,7 @@
 
     <div id="ui-trigger-zone"></div>
     <div id="thumb-slider">
-        <div class="slider-spacer"></div> <!-- START BUFFER -->
-        <div id="thumb-root" style="display:flex; align-items:center; gap:12px;"></div>
-        <div class="slider-spacer"></div> <!-- END BUFFER -->
+        <div class="slider-rail" id="thumb-root"></div>
     </div>
     <button id="slideshow-btn">AUTO</button>
 
@@ -104,45 +103,43 @@
         const slider = document.getElementById('thumb-slider');
         const titleBlock = document.getElementById('title-block');
         const total = 39;
-        let isAuto = false, autoTimer, lastActiveIdx = 0;
+        let isAuto = false, autoTimer, lastIdx = 0;
 
-        // 1. Build Main View
-        const mainFrag = document.createDocumentFragment();
+        // 1. Build Main Gallery
+        const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
             s.dataset.id = i;
             s.innerHTML = `<div class="photo-container"></div>`;
-            mainFrag.appendChild(s);
+            frag.appendChild(s);
         }
-        root.appendChild(mainFrag);
+        root.appendChild(frag);
 
-        // 2. Build Unlocked Slider
+        // 2. Build Unlocked Scrubber
         for (let i = 1; i <= total; i++) {
             const t = document.createElement('div');
             t.className = 'thumb';
             t.style.backgroundImage = `url(img-${i}.avif)`;
-            t.onclick = () => {
-                items[i-1].scrollIntoView({ behavior: 'smooth' });
-            };
+            t.onclick = () => items[i-1].scrollIntoView({ behavior: 'smooth' });
             thumbRoot.appendChild(t);
         }
 
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 3. CONTINUOUS FRAME SYNC
-        const updateFrame = () => {
+        // 3. FRAME-SYNC ENGINE
+        const sync = () => {
             const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
             
+            // Sync: Vertical Scroll -> Slider Focus
             items.forEach((item, i) => {
                 const itemCenter = item.offsetTop + (item.offsetHeight / 2);
-                if (Math.abs(mainCenter - itemCenter) < 300) {
-                    if (lastActiveIdx !== i) {
-                        lastActiveIdx = i;
+                if (Math.abs(mainCenter - itemCenter) < 250) {
+                    if (lastIdx !== i) {
+                        lastIdx = i;
                         item.classList.add('active');
                         thumbs[i].classList.add('active-thumb');
                         
-                        // Center current thumb without locking user out
                         if (!slider.matches(':hover')) {
                             thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                         }
@@ -158,7 +155,7 @@
                 }
             });
 
-            // INSTANT SCRUBBING
+            // Sync: Horizontal Scrub -> Instant Main View
             if (slider.matches(':hover')) {
                 const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
                 let closestIdx = 0;
@@ -170,15 +167,15 @@
                     if (d < minDist) { minDist = d; closestIdx = i; }
                 });
                 
-                if (lastActiveIdx !== closestIdx) {
+                if (lastIdx !== closestIdx) {
                     items[closestIdx].scrollIntoView({ behavior: 'auto' });
                 }
             }
-            requestAnimationFrame(updateFrame);
+            requestAnimationFrame(sync);
         };
-        requestAnimationFrame(updateFrame);
+        requestAnimationFrame(sync);
 
-        // 4. AUTO SLIDESHOW (4s Cycle)
+        // 4. PREMIUM AUTO-SCROLL (4s cycle / 1.8s ease)
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
@@ -186,15 +183,15 @@
             btn.style.color = isAuto ? "#000" : "#fff";
             if (isAuto) {
                 autoTimer = setInterval(() => {
-                    const next = (lastActiveIdx + 1) % items.length;
+                    const next = (lastIdx + 1) % items.length;
                     items[next].scrollIntoView({ behavior: 'smooth' });
                 }, 4000); 
             } else clearInterval(autoTimer);
         };
 
         window.onkeydown = (e) => {
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(lastActiveIdx + 1, total-1)].scrollIntoView();
-            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(lastActiveIdx - 1, 0)].scrollIntoView();
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(lastIdx + 1, total-1)].scrollIntoView();
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(lastIdx - 1, 0)].scrollIntoView();
         };
 
         wrapper.onwheel = () => { if(isAuto) btn.click(); };
