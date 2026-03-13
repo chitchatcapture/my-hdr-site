@@ -6,7 +6,7 @@
     <title>ULTRA HDR • CLARENCE</title>
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --ui: rgba(255, 255, 255, 0.9); --glass: rgba(15, 15, 15, 0.6); }
+        :root { --bg: #000; --ui: rgba(255, 255, 255, 0.9); --glass: rgba(15, 15, 15, 0.7); }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
@@ -18,7 +18,7 @@
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
             scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Hide scrollbar for cleaner look */
+            scrollbar-width: none;
         }
         #main-wrapper::-webkit-scrollbar { display: none; }
 
@@ -27,54 +27,54 @@
             justify-content: center; align-items: center; scroll-snap-align: center;
             scroll-snap-stop: always; position: relative;
         }
-
-        /* Detached Title Page */
         header { height: 100vh; gap: 40px; }
         .header-content { text-align: center; transition: opacity 0.6s ease; will-change: opacity; }
         h1 { font-size: 0.8rem; font-weight: 300; letter-spacing: 0.9em; text-transform: uppercase; margin: 0; }
         .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; margin-top: 15px; }
 
-        /* IMAGE FOCUS SETTINGS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            transition: transform 0.8s cubic-bezier(0.2, 1, 0.3, 1), filter 0.8s ease, opacity 0.8s ease;
+            transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1), filter 0.7s ease, opacity 0.7s ease;
             filter: brightness(0.5) blur(2px); opacity: 0.8; transform: scale(0.95);
             will-change: transform, filter;
         }
         .active .photo-container { filter: brightness(1) blur(0px); opacity: 1; transform: scale(1); }
-
         img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 100px rgba(0,0,0,1); }
 
-        /* iOS 26 FILMSTRIP SLIDER */
+        /* OPTIMIZED iOS 26 FILMSTRIP */
         #thumb-slider {
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 600px; height: 55px; z-index: 10001;
+            position: fixed; bottom: 25px; left: 50%; transform: translate3d(-50%, 0, 0);
+            width: 92%; max-width: 500px; height: 60px; z-index: 10001;
             display: flex; align-items: center; gap: 8px; overflow-x: auto;
-            padding: 0 45%; background: var(--glass); backdrop-filter: blur(25px);
-            border-radius: 16px; scrollbar-width: none; pointer-events: auto;
+            padding: 0 45%; background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            border-radius: 18px; scrollbar-width: none; border: 1px solid rgba(255,255,255,0.08);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            will-change: opacity, transform;
         }
+        #thumb-slider.hidden { opacity: 0; transform: translate3d(-50%, 20px, 0); pointer-events: none; }
         #thumb-slider::-webkit-scrollbar { display: none; }
 
         .thumb {
-            flex: 0 0 35px; height: 24px; background-size: cover; background-position: center;
+            flex: 0 0 32px; height: 22px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.4s cubic-bezier(0.2, 1, 0.2, 1);
-            opacity: 0.4; border: 1px solid transparent; cursor: pointer;
+            opacity: 0.4; filter: grayscale(0.5); cursor: pointer; will-change: flex, height;
         }
         .thumb.active-thumb {
-            flex: 0 0 44px; height: 44px; opacity: 1; border: 1.5px solid #fff; border-radius: 6px;
+            flex: 0 0 42px; height: 42px; opacity: 1; filter: grayscale(0);
+            border: 1.5px solid #fff; border-radius: 6px;
         }
 
         /* NAVIGATION ARROWS */
         .nav-arrows {
             position: fixed; bottom: 35px; left: 40px; z-index: 10000;
-            display: none; flex-direction: column; gap: 6px;
+            display: none; flex-direction: column; gap: 6px; transition: opacity 0.5s ease;
         }
         @media (min-width: 1024px) { .nav-arrows { display: flex; } }
+        .nav-arrows.hidden { opacity: 0; }
+
         .key {
             width: 26px; height: 26px; border: 1.5px solid var(--ui); border-radius: 6px;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
         }
         .key::after { content: ''; border: solid #fff; border-width: 0 2px 2px 0; padding: 3px; }
         .u::after { transform: rotate(-135deg); } .d::after { transform: rotate(45deg); }
@@ -90,7 +90,7 @@
         @media (max-width: 768px) {
             header, section { height: 85vh; } header { height: 100vh; }
             .photo-container { width: 95%; height: 65vh; }
-            #thumb-slider { width: 95%; height: 50px; bottom: 20px; }
+            #thumb-slider { height: 50px; bottom: 20px; }
         }
     </style>
 </head>
@@ -107,8 +107,7 @@
         <div id="gallery-root"></div>
     </div>
 
-    <!-- UI LAYER -->
-    <div class="nav-arrows">
+    <div class="nav-arrows" id="nav-arrows">
         <div style="display:flex; justify-content:center;"><div class="key u"></div></div>
         <div style="display:flex; gap:6px;"><div class="key l"></div><div class="key d"></div><div class="key r"></div></div>
     </div>
@@ -120,12 +119,13 @@
         const root = document.getElementById('gallery-root');
         const wrapper = document.getElementById('main-wrapper');
         const slider = document.getElementById('thumb-slider');
+        const arrows = document.getElementById('nav-arrows');
         const titleBlock = document.getElementById('title-block');
         const total = 39;
         let isAuto = false;
-        let timer;
+        let timer, idleTimer;
 
-        // 1. Setup Gallery & Filmstrip
+        // 1. Build DOM
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -146,22 +146,33 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 2. Intelligent Sync & Loading
+        // 2. Hide UI when Idle
+        const showUI = () => {
+            slider.classList.remove('hidden');
+            arrows.classList.remove('hidden');
+            clearTimeout(idleTimer);
+            if (!isAuto) idleTimer = setTimeout(() => {
+                slider.classList.add('hidden');
+                arrows.classList.add('hidden');
+            }, 2500);
+        };
+        wrapper.addEventListener('scroll', showUI, { passive: true });
+        window.addEventListener('touchstart', showUI, { passive: true });
+        showUI();
+
+        // 3. Observer logic
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const idx = [...items].indexOf(entry.target);
                     entry.target.classList.add('active');
                     
-                    // Sync iOS Slider
                     thumbs.forEach(t => t.classList.remove('active-thumb'));
                     thumbs[idx].classList.add('active-thumb');
                     thumbs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
-                    // Handle UI
                     titleBlock.style.opacity = idx === 0 ? "1" : "0";
 
-                    // Pre-load Logic
                     const load = (el) => {
                         if (!el) return;
                         const c = el.querySelector('.photo-container');
@@ -170,38 +181,41 @@
                         }
                     };
                     load(items[idx]);
-                    load(items[idx + 1]); // Buffer next
+                    load(items[idx + 1]);
                 } else {
                     entry.target.classList.remove('active');
                 }
             });
-        }, { threshold: 0.5, rootMargin: "10% 0px" });
+        }, { threshold: 0.5 });
 
         items.forEach(i => obs.observe(i));
 
-        // 3. Navigation Controls
+        // 4. Controls
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
             btn.style.background = isAuto ? "#fff" : "var(--glass)";
             btn.style.color = isAuto ? "#000" : "#fff";
             if (isAuto) {
+                slider.classList.add('hidden');
                 timer = setInterval(() => {
                     const curr = [...items].indexOf(document.querySelector('.active'));
                     items[(curr + 1) % items.length].scrollIntoView({ behavior: 'smooth' });
                 }, 4000);
-            } else clearInterval(timer);
+            } else {
+                clearInterval(timer);
+                showUI();
+            }
         };
 
         window.onkeydown = (e) => {
+            showUI();
             const curr = [...items].indexOf(document.querySelector('.active'));
             if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(curr + 1, total-1)].scrollIntoView();
             if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(curr - 1, 0)].scrollIntoView();
         };
 
-        // Interaction kill for Auto
         wrapper.onwheel = () => { if(isAuto) btn.click(); };
-        wrapper.ontouchstart = () => { if(isAuto) btn.click(); };
     </script>
 </body>
 </html>
