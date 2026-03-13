@@ -5,119 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ULTRA HDR • CLARENCE</title>
     <style>
-        :root { 
-            --bg: #000; 
-            --glass: rgba(15, 15, 15, 0.7); 
-            --ui: rgba(255, 255, 255, 0.9);
-        }
+        :root { --bg: #000; --active-scale: 1.05; }
         
-        html, body { 
-            background: var(--bg); color: #fff; margin: 0; padding: 0;
+        body, html { 
+            background: var(--bg); margin: 0; padding: 0; height: 100%; width: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-            height: 100%; width: 100%; overflow: hidden;
-            -webkit-font-smoothing: antialiased;
+            overflow: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        /* 1. NATIVE SCROLL SNAP: This makes mobile feel "Natural" */
-        #main-wrapper {
-            height: 100vh;
-            overflow-y: auto;
-            scroll-snap-type: y mandatory;
+        /* FILMSTRIP WRAPPER */
+        #viewport {
+            height: 100vh; width: 100vw;
+            display: flex;
+            overflow-x: auto; /* Horizontal for mobile peeking */
+            overflow-y: hidden;
+            scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
+            align-items: center;
         }
 
         header, section {
-            height: 100vh; width: 100vw;
+            flex: 0 0 85vw; /* 85% width lets the next/prev photos "peek" in */
+            height: 100vh;
             display: flex; flex-direction: column; 
             justify-content: center; align-items: center;
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
+            scroll-snap-align: center;
             position: relative;
-        }
-        
-        h1 { font-size: 0.75rem; font-weight: 300; letter-spacing: 0.8em; text-transform: uppercase; opacity: 0.5; }
-        .credit { color: #333; font-size: 0.5rem; letter-spacing: 0.4em; text-transform: uppercase; margin-top: 30px; }
-
-        .photo-container { 
-            width: 90%; height: 80vh; 
-            display: flex; justify-content: center; align-items: center; 
-            overflow: hidden;
+            transition: opacity 0.8s ease;
         }
 
-        /* 2. SMOOTH FADE-IN ANIMATION */
+        /* Initial Header styling */
+        header { flex: 0 0 100vw; }
+        h1 { font-size: 0.7rem; font-weight: 300; letter-spacing: 0.8em; text-transform: uppercase; opacity: 0.5; }
+
+        /* IMAGE CONTAINER & FOCUS LOGIC */
+        .photo-container {
+            width: 90%; height: 70vh;
+            display: flex; justify-content: center; align-items: center;
+            transition: transform 1.2s cubic-bezier(0.2, 1, 0.2, 1), filter 1.2s ease;
+            filter: brightness(0.2) blur(4px); /* Non-showing photos are dimmed/blurred */
+            transform: scale(0.85);
+            will-change: transform, filter;
+        }
+
+        /* Active Photo Pop */
+        section.is-active .photo-container {
+            filter: brightness(1) blur(0px);
+            transform: scale(1);
+        }
+
         img {
             max-width: 100%; max-height: 100%; border-radius: 2px;
-            box-shadow: 0 40px 100px rgba(0,0,0,1);
-            opacity: 0;
-            transform: scale(0.98);
-            transition: opacity 1.2s ease, transform 1.2s cubic-bezier(0.2, 1, 0.3, 1);
-            will-change: opacity, transform;
+            box-shadow: 0 30px 100px rgba(0,0,0,1);
+            pointer-events: none;
         }
 
-        /* Triggered when slide is in view */
-        section.active img {
-            opacity: 1;
-            transform: scale(1.02);
-            animation: cinematicFloat 20s ease-in-out infinite;
+        /* UI ELEMENTS */
+        .ui-layer {
+            position: fixed; bottom: 30px; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 30px;
+            box-sizing: border-box; z-index: 100; pointer-events: none;
         }
 
-        @keyframes cinematicFloat {
-            50% { transform: scale(1.05) translateY(-10px); }
-        }
-
-        /* UI CONTROLS */
         #slideshow-btn {
-            position: fixed; bottom: 35px; right: 35px; z-index: 10000;
-            background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px 26px; border-radius: 50px;
-            font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
-            cursor: pointer; box-shadow: 0 10px 40px rgba(0,0,0,0.8); transition: 0.3s;
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 12px 24px; border-radius: 40px;
+            font-size: 0.6rem; letter-spacing: 0.2em; pointer-events: auto; cursor: pointer;
         }
-        #slideshow-btn.active { background: #fff; color: #000; font-weight: 700; }
 
-        .controls-hint {
-            position: fixed; bottom: 35px; left: 35px; z-index: 10000;
-            display: none; flex-direction: column; gap: 5px; opacity: 0.8;
-        }
-        @media (min-width: 801px) { .controls-hint { display: flex; } }
-        
-        .key {
-            width: 24px; height: 24px; border: 1.5px solid var(--ui); border-radius: 5px;
-            background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;
-        }
-        .key::after { content: ''; border: solid #fff; border-width: 0 2px 2px 0; padding: 2.5px; }
-        .u::after { transform: rotate(-135deg); } .d::after { transform: rotate(45deg); }
-        .l::after { transform: rotate(135deg); } .r::after { transform: rotate(-45deg); }
+        #slideshow-btn.active { background: #fff; color: #000; font-weight: bold; }
 
-        @media (max-width: 768px) { .photo-container { width: 95%; height: 70vh; } }
+        /* DESKTOP ADJUSTMENTS */
+        @media (min-width: 1024px) {
+            #viewport {
+                flex-direction: column; /* Desktop feels more natural scrolling down */
+                overflow-y: auto; overflow-x: hidden;
+                scroll-snap-type: y mandatory;
+            }
+            header, section { flex: 0 0 100vh; width: 100vw; }
+            .photo-container { width: 70%; height: 85vh; }
+        }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <div id="main-wrapper">
-        <header class="active">
+    <div id="viewport">
+        <header>
             <h1>Ultra HDR Portfolio</h1>
-            <div class="credit">Photographed by Clarence • 2023–2025</div>
+            <div style="color:#222; font-size:0.5rem; letter-spacing:0.3em; margin-top:20px;">CLARENCE • 2025</div>
         </header>
-        <div id="gallery-root"></div>
+        <div id="gallery-root" style="display: contents;"></div>
     </div>
 
-    <div class="controls-hint">
-        <div style="display:flex; justify-content:center;"><div class="key u"></div></div>
-        <div style="display:flex; gap:5px;"><div class="key l"></div><div class="key d"></div><div class="key r"></div></div>
+    <div class="ui-layer">
+        <div style="opacity:0.3; font-size:0.5rem; letter-spacing:0.2em;">SWIPE OR SCROLL</div>
+        <button id="slideshow-btn">AUTO</button>
     </div>
-
-    <button id="slideshow-btn">Start Slideshow</button>
 
     <script>
         const root = document.getElementById('gallery-root');
-        const wrapper = document.getElementById('main-wrapper');
+        const view = document.getElementById('viewport');
         const total = 39;
-        let autoPlay = false;
-        let slideTimer;
+        let isAuto = false;
+        let timer;
 
-        // Generate Sections
+        // Populate Photos
         for (let i = 1; i <= total; i++) {
             const s = document.createElement('section');
             s.dataset.id = i;
@@ -125,57 +118,60 @@
             root.appendChild(s);
         }
 
-        const sections = document.querySelectorAll('header, section');
+        const items = document.querySelectorAll('header, section');
 
-        // 3. INTERSECTION OBSERVER: Handles smooth fade-ins and lazy loading
-        const obs = new IntersectionObserver((entries) => {
+        // Focus Tracking & Lazy Loading
+        const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
+                    entry.target.classList.add('is-active');
                     const id = entry.target.dataset.id;
                     const container = entry.target.querySelector('.photo-container');
                     if (id && container && !container.innerHTML) {
-                        container.innerHTML = `<img src="img-${id}.avif" onload="this.style.opacity=1">`;
+                        container.innerHTML = `<img src="img-${id}.avif">`;
                     }
                 } else {
-                    entry.target.classList.remove('active');
+                    entry.target.classList.remove('is-active');
                 }
             });
-        }, { threshold: 0.5 });
+        }, { threshold: 0.6 });
 
-        sections.forEach(s => obs.observe(s));
+        items.forEach(item => observer.observe(item));
 
-        // Keyboard & Slideshow Logic
-        function goTo(idx) {
-            if (idx < 0 || idx >= sections.length) return;
-            sections[idx].scrollIntoView({ behavior: 'smooth' });
+        // Navigation Controls
+        function navigate(dir) {
+            const currentIdx = [...items].indexOf(document.querySelector('.is-active'));
+            const nextIdx = Math.max(0, Math.min(items.length - 1, currentIdx + dir));
+            items[nextIdx].scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Desktop Keyboard Support
         window.addEventListener('keydown', (e) => {
-            const current = Math.round(wrapper.scrollTop / window.innerHeight);
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") goTo(current + 1);
-            if (e.key === "ArrowUp" || e.key === "ArrowLeft") goTo(current - 1);
+            if (e.key === "ArrowRight" || e.key === "ArrowDown") navigate(1);
+            if (e.key === "ArrowLeft" || e.key === "ArrowUp") navigate(-1);
         });
 
+        // Slideshow Logic (4s)
         const btn = document.getElementById('slideshow-btn');
         btn.addEventListener('click', () => {
-            autoPlay = !autoPlay;
+            isAuto = !isAuto;
             btn.classList.toggle('active');
-            btn.innerText = autoPlay ? "Stop Slideshow" : "Start Slideshow";
-            if (autoPlay) {
-                slideTimer = setInterval(() => {
-                    const current = Math.round(wrapper.scrollTop / window.innerHeight);
-                    const next = (current + 1) % sections.length;
-                    goTo(next);
+            btn.innerText = isAuto ? "STOP" : "AUTO";
+            if (isAuto) {
+                timer = setInterval(() => {
+                    const currentIdx = [...items].indexOf(document.querySelector('.is-active'));
+                    if (currentIdx === items.length - 1) items[0].scrollIntoView();
+                    else navigate(1);
                 }, 4000);
             } else {
-                clearInterval(slideTimer);
+                clearInterval(timer);
             }
         });
 
-        // Stops slideshow if user manually scrolls
-        wrapper.addEventListener('touchstart', () => { if(autoPlay) btn.click(); });
-        wrapper.addEventListener('wheel', () => { if(autoPlay) btn.click(); });
+        // Kill slideshow on manual user interaction
+        view.addEventListener('touchstart', () => { if(isAuto) btn.click(); });
+        view.addEventListener('wheel', () => { if(isAuto) btn.click(); });
+
     </script>
 </body>
 </html>
