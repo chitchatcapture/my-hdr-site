@@ -6,7 +6,12 @@
     <title>ULTRA HDR • CLARENCE</title>
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --glass: rgba(12, 12, 12, 0.75); --border: rgba(255, 255, 255, 0.12); }
+        :root { 
+            --bg: #000; 
+            --glass: rgba(12, 12, 12, 0.8); 
+            --border: rgba(255, 255, 255, 0.15); 
+            --accent: #fff;
+        }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
@@ -26,47 +31,68 @@
             scroll-snap-stop: always; position: relative;
         }
 
+        .header-content { 
+            text-align: center; transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+            margin-bottom: 40px; will-change: opacity; position: absolute; top: 15%;
+        }
+        h1 { font-size: 0.85rem; font-weight: 300; letter-spacing: 1em; text-transform: uppercase; margin: 0; }
+        .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
+        .hdr-note { color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 12px; }
+
+        /* ULTRA HDR DYNAMICS */
         .photo-container { 
-            width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1.2s ease;
-            filter: brightness(0.6) blur(2px); transform: scale(0.92);
+            width: 90%; height: 65vh; display: flex; justify-content: center; align-items: center;
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1.2s ease-out;
+            filter: brightness(0.5) blur(4px); transform: scale(0.9);
+            will-change: transform, filter;
         }
         
-        .active .photo-container { filter: brightness(1.1) blur(0px); transform: scale(1); }
-        header.active .photo-container { transition: none !important; filter: brightness(1.1) blur(0px) !important; transform: scale(1) !important; }
+        .active .photo-container { 
+            filter: brightness(1.15) blur(0px); 
+            transform: scale(1); 
+        }
 
-        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 140px rgba(0,0,0,1); }
+        /* Smooth load for cover */
+        header.active .photo-container { transition: filter 2s ease; }
 
-        /* iOS STRIP SYSTEM */
+        img { max-width: 100%; max-height: 100%; border-radius: 3px; box-shadow: 0 50px 150px rgba(0,0,0,1); object-fit: contain; }
+
+        /* THE STRIP SYSTEM */
         #thumb-slider {
             position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 92%; max-width: 550px; height: 80px; z-index: 10002;
+            width: 92%; max-width: 500px; height: 80px; z-index: 10002;
             display: flex; align-items: center; overflow-x: auto;
-            background: var(--glass); backdrop-filter: blur(40px) saturate(1.8);
-            -webkit-backdrop-filter: blur(40px) saturate(1.8);
-            border-radius: 24px; border: 1px solid var(--border);
+            background: var(--glass); backdrop-filter: blur(50px) saturate(2);
+            -webkit-backdrop-filter: blur(50px) saturate(2);
+            border-radius: 30px; border: 1px solid var(--border);
             scrollbar-width: none; scroll-snap-type: x mandatory;
+            touch-action: pan-x;
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
 
-        .slider-rail { display: flex; align-items: center; gap: 12px; height: 100%; width: max-content; }
+        .slider-rail { display: flex; align-items: center; gap: 14px; height: 100%; width: max-content; }
         
-        /* Fixed Buffer Logic for dead-centering first and last */
-        .buffer { width: calc(275px - 22px); flex-shrink: 0; } 
-        @media (max-width: 600px) { .buffer { width: calc(46vw - 22px); } }
+        /* Last photo dead-center buffer */
+        .buffer { width: calc(250px - 25px); flex-shrink: 0; }
+        @media (max-width: 500px) { .buffer { width: calc(46vw - 25px); } }
 
         .thumb {
-            flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
-            border-radius: 4px; transition: all 0.3s ease;
-            opacity: 0.35; filter: brightness(0.7); scroll-snap-align: center;
+            flex: 0 0 36px; height: 24px; background-size: cover; background-position: center;
+            border-radius: 5px; transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+            opacity: 0.3; filter: grayscale(0.5) brightness(0.6); scroll-snap-align: center;
         }
-        .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
+        .thumb.active-thumb { 
+            flex: 0 0 48px; height: 48px; opacity: 1; 
+            filter: grayscale(0) brightness(1.2); border-radius: 8px; 
+            box-shadow: 0 0 20px rgba(255,255,255,0.1);
+        }
 
         #slideshow-btn {
-            position: fixed; top: 30px; right: 30px; z-index: 10000;
+            position: fixed; top: 40px; right: 30px; z-index: 10000;
             background: var(--glass); border: 1px solid var(--border);
-            color: #fff; padding: 10px 22px; border-radius: 40px; font-size: 0.6rem;
-            letter-spacing: 0.3em; cursor: pointer;
+            color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 0.55rem;
+            letter-spacing: 0.4em; cursor: pointer; backdrop-filter: blur(10px);
+            transition: 0.3s;
         }
     </style>
 </head>
@@ -74,6 +100,11 @@
 
     <div id="main-wrapper">
         <header class="active" data-id="1">
+            <div class="header-content" id="title-block">
+                <h1>Ultra HDR Portfolio</h1>
+                <div class="credit">Photographed by Clarence • 2023–2025</div>
+                <div class="hdr-note">Best viewed on HDR displays</div>
+            </div>
             <div class="photo-container"><img src="img-1.avif"></div>
         </header>
         <div id="gallery-root"></div>
@@ -82,7 +113,7 @@
     <div id="thumb-slider">
         <div class="slider-rail">
             <div class="buffer"></div>
-            <div id="thumb-root" style="display:flex; align-items:center; gap:12px;"></div>
+            <div id="thumb-root" style="display:flex; align-items:center; gap:14px;"></div>
             <div class="buffer"></div>
         </div>
     </div>
@@ -94,11 +125,12 @@
         const thumbRoot = document.getElementById('thumb-root');
         const wrapper = document.getElementById('main-wrapper');
         const slider = document.getElementById('thumb-slider');
+        const titleBlock = document.getElementById('title-block');
         const total = 39;
         let lastIdx = 0;
         let isTouchingSlider = false;
 
-        // 1. Build DOM
+        // 1. GENERATE GALLERY & THUMBS
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -113,6 +145,7 @@
             t.className = 'thumb';
             t.style.backgroundImage = `url(img-${i}.avif)`;
             t.onclick = () => { 
+                isTouchingSlider = false; // Prevent logic conflict
                 items[i-1].scrollIntoView({ behavior: 'smooth' }); 
             };
             thumbRoot.appendChild(t);
@@ -121,23 +154,30 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
+        // 2. RENDERING & HDR SYNC
         const updateUI = (idx) => {
             if (lastIdx === idx && items[idx].classList.contains('active')) return;
-            lastIdx = idx;
+            
             items.forEach((it, i) => it.classList.toggle('active', i === idx));
             thumbs.forEach((th, i) => th.classList.toggle('active-thumb', i === idx));
             
-            const c = items[idx].querySelector('.photo-container');
-            if (c && !c.innerHTML) {
+            // Fade title only on first photo
+            titleBlock.style.opacity = idx === 0 ? "1" : "0";
+            titleBlock.style.pointerEvents = idx === 0 ? "auto" : "none";
+            
+            // Lazy Load with HDR check
+            const container = items[idx].querySelector('.photo-container');
+            if (container && !container.innerHTML) {
                 const id = items[idx].dataset.id || 1;
-                c.innerHTML = `<img src="img-${id}.avif">`;
+                container.innerHTML = `<img src="img-${id}.avif" loading="lazy">`;
             }
+            lastIdx = idx;
         };
 
-        // 2. DEAD CENTRE SYNC ENGINE
-        const sync = () => {
+        // 3. MASTER SYNC ENGINE (High Speed)
+        const syncEngine = () => {
             if (isTouchingSlider) {
-                // If user touches the strip, strip controls the gallery
+                // STRIP CONTROLS GALLERY
                 const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
                 let closestIdx = 0;
                 let minDist = Infinity;
@@ -150,15 +190,15 @@
 
                 if (lastIdx !== closestIdx) {
                     updateUI(closestIdx);
-                    // Jump gallery to match strip
+                    // Instant jump for mirroring effect
                     wrapper.scrollTo({ top: items[closestIdx].offsetTop, behavior: 'auto' });
                 }
             } else {
-                // If user scrolls the gallery, gallery controls the strip
+                // GALLERY CONTROLS STRIP
                 const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
                 items.forEach((item, i) => {
                     const center = item.offsetTop + (item.offsetHeight / 2);
-                    if (Math.abs(mainCenter - center) < 100) {
+                    if (Math.abs(mainCenter - center) < 150) {
                         if (lastIdx !== i) {
                             updateUI(i);
                             thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -166,23 +206,34 @@
                     }
                 });
             }
-            requestAnimationFrame(sync);
+            requestAnimationFrame(syncEngine);
         };
 
-        // Input Listeners
-        slider.addEventListener('touchstart', () => isTouchingSlider = true);
-        slider.addEventListener('mousedown', () => isTouchingSlider = true);
+        // Interaction Detection
+        slider.addEventListener('touchstart', () => { isTouchingSlider = true; stopAuto(); }, {passive: true});
+        slider.addEventListener('mousedown', () => { isTouchingSlider = true; stopAuto(); });
         window.addEventListener('touchend', () => isTouchingSlider = false);
         window.addEventListener('mouseup', () => isTouchingSlider = false);
+        wrapper.addEventListener('touchstart', stopAuto, {passive: true});
+        wrapper.addEventListener('wheel', stopAuto, {passive: true});
 
-        requestAnimationFrame(sync);
-
-        // Auto Button logic (Simplified for space)
+        // 4. AUTO SLIDESHOW
         let isAuto = false, autoTimer;
-        document.getElementById('slideshow-btn').onclick = function() {
+        const btn = document.getElementById('slideshow-btn');
+        
+        function stopAuto() {
+            if(isAuto) {
+                isAuto = false;
+                clearInterval(autoTimer);
+                btn.style.background = "var(--glass)";
+                btn.style.color = "#fff";
+            }
+        }
+
+        btn.onclick = () => {
             isAuto = !isAuto;
-            this.style.background = isAuto ? "#fff" : "var(--glass)";
-            this.style.color = isAuto ? "#000" : "#fff";
+            btn.style.background = isAuto ? "#fff" : "var(--glass)";
+            btn.style.color = isAuto ? "#000" : "#fff";
             if (isAuto) {
                 autoTimer = setInterval(() => {
                     const next = (lastIdx + 1) % items.length;
@@ -190,6 +241,9 @@
                 }, 4000);
             } else clearInterval(autoTimer);
         };
+
+        // Start Engine
+        requestAnimationFrame(syncEngine);
     </script>
 </body>
 </html>
