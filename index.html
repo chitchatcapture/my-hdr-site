@@ -92,6 +92,109 @@
     </style>
 </head>
 <body oncontextmenu="return false;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ULTRA HDR • CLARENCE</title>
+    <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
+    <style>
+        :root { 
+            --bg: #000; 
+            --glass: rgba(12, 12, 12, 0.75); 
+            --border: rgba(255, 255, 255, 0.12); 
+            --vh: 100dvh; /* Modern fix for iOS Safari bars */
+        }
+        
+        html, body { 
+            background: var(--bg); color: #fff; margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            height: var(--vh); width: 100%; overflow: hidden; -webkit-font-smoothing: antialiased;
+            touch-action: none; /* Prevents accidental zooming/gestures */
+        }
+
+        #main-wrapper {
+            height: var(--vh); overflow-y: auto; scroll-snap-type: y mandatory;
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            touch-action: pan-y;
+        }
+        #main-wrapper::-webkit-scrollbar { display: none; }
+
+        header, section {
+            height: var(--vh); width: 100vw; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; scroll-snap-align: center;
+            scroll-snap-stop: always; position: relative;
+        }
+
+        .header-content { 
+            text-align: center; transition: opacity 0.6s ease; 
+            margin-bottom: 40px; will-change: opacity;
+            z-index: 10;
+        }
+        h1 { font-size: 0.85rem; font-weight: 300; letter-spacing: 1em; text-transform: uppercase; margin: 0; }
+        .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
+        .hdr-note { color: rgba(255,255,255,0.2); font-size: 0.45rem; letter-spacing: 0.3em; text-transform: uppercase; margin-top: 12px; }
+
+        .photo-container { 
+            width: 90%; height: 75%; display: flex; justify-content: center; align-items: center;
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1.2s ease;
+            filter: brightness(0.6) blur(2px); transform: scale(0.92);
+            will-change: transform, filter;
+        }
+        
+        .active .photo-container { filter: brightness(1.1) blur(0px); transform: scale(1); }
+
+        header.active .photo-container { 
+            transition: none !important; 
+            filter: brightness(1.1) blur(0px) !important; 
+            transform: scale(1) !important; 
+        }
+
+        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 140px rgba(0,0,0,1); object-fit: contain; }
+
+        /* FIXED iOS STRIP SYSTEM */
+        #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 120px; z-index: 1000; pointer-events: none; }
+        
+        #thumb-slider {
+            position: fixed; bottom: 35px; left: 50%; transform: translate3d(-50%, 30px, 0);
+            width: 92%; max-width: 550px; height: 70px; z-index: 1001;
+            display: flex; align-items: center; overflow-x: auto;
+            background: var(--glass); backdrop-filter: blur(40px) saturate(1.8);
+            -webkit-backdrop-filter: blur(40px) saturate(1.8);
+            border-radius: 24px; border: 1px solid var(--border);
+            opacity: 0; transition: all 0.5s cubic-bezier(0.15, 1, 0.3, 1);
+            scrollbar-width: none; pointer-events: auto;
+            scroll-snap-type: x mandatory;
+        }
+        #thumb-slider::-webkit-scrollbar { display: none; }
+        
+        /* Trigger visibility on hover or active state */
+        body:hover #thumb-slider, #thumb-slider:active, .active-ui #thumb-slider { 
+            opacity: 1; transform: translate3d(-50%, 0, 0); 
+        }
+
+        .slider-rail { display: flex; align-items: center; gap: 12px; height: 100%; padding: 0 20px; }
+        .buffer { flex: 0 0 calc(50% - 30px); height: 1px; }
+
+        .thumb {
+            flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
+            border-radius: 4px; transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+            opacity: 0.35; filter: brightness(0.7); scroll-snap-align: center;
+            cursor: pointer;
+        }
+        .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
+
+        #slideshow-btn {
+            position: fixed; top: 30px; right: 30px; z-index: 10000;
+            background: var(--glass); border: 1px solid var(--border);
+            color: #fff; padding: 10px 22px; border-radius: 40px; font-size: 0.6rem;
+            letter-spacing: 0.3em; cursor: pointer; transition: 0.4s;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
 
     <div id="main-wrapper">
         <header class="active" data-id="1">
@@ -108,9 +211,9 @@
     <div id="ui-trigger-zone"></div>
     <div id="thumb-slider">
         <div class="slider-rail">
-            <div class="buffer"></div> <!-- Start Buffer -->
+            <div class="buffer"></div>
             <div id="thumb-root" style="display:flex; align-items:center; gap:12px;"></div>
-            <div class="buffer"></div> <!-- End Buffer -->
+            <div class="buffer"></div>
         </div>
     </div>
     <button id="slideshow-btn">AUTO</button>
@@ -123,6 +226,7 @@
         const titleBlock = document.getElementById('title-block');
         const total = 39;
         let isAuto = false, autoTimer, lastIdx = 0;
+        let isUserScrollingSlider = false;
 
         // 1. Build DOM
         const frag = document.createDocumentFragment();
@@ -138,58 +242,63 @@
             const t = document.createElement('div');
             t.className = 'thumb';
             t.style.backgroundImage = `url(img-${i}.avif)`;
-            t.onclick = () => { items[i-1].scrollIntoView({ behavior: 'smooth' }); };
+            t.onclick = (e) => { 
+                e.stopPropagation();
+                items[i-1].scrollIntoView({ behavior: 'smooth' }); 
+            };
             thumbRoot.appendChild(t);
         }
 
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 2. RENDERING ENGINE
-        const sync = () => {
-            const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
-            const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
-
-            if (slider.matches(':hover')) {
-                let closestIdx = 0;
-                let minDist = Infinity;
-                thumbs.forEach((t, i) => {
-                    const tCenter = t.offsetLeft + (t.offsetWidth / 2);
-                    const d = Math.abs(sliderCenter - tCenter);
-                    if (d < minDist) { minDist = d; closestIdx = i; }
-                });
-                if (lastIdx !== closestIdx) {
-                    lastIdx = closestIdx;
-                    wrapper.scrollTop = items[closestIdx].offsetTop;
-                    updateUI(closestIdx);
-                }
-            } else {
-                items.forEach((item, i) => {
-                    const center = item.offsetTop + (item.offsetHeight / 2);
-                    if (Math.abs(mainCenter - center) < 250) {
-                        if (lastIdx !== i) {
-                            lastIdx = i;
-                            updateUI(i);
-                            thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                        }
-                    }
-                });
-            }
-            requestAnimationFrame(sync);
-        };
-
+        // 2. RENDERING & SYNC ENGINE
         const updateUI = (idx) => {
             items.forEach((it, i) => it.classList.toggle('active', i === idx));
             thumbs.forEach((th, i) => th.classList.toggle('active-thumb', i === idx));
             titleBlock.style.opacity = idx === 0 ? "1" : "0";
+            
+            // Lazy Load Images
             const c = items[idx].querySelector('.photo-container');
             if (items[idx].dataset.id && c && !c.innerHTML) {
                 c.innerHTML = `<img src="img-${items[idx].dataset.id}.avif">`;
             }
+            
+            // Pre-load next image for smoothness
+            if(idx + 1 < total) {
+                const nextC = items[idx+1].querySelector('.photo-container');
+                if(items[idx+1].dataset.id && nextC && !nextC.innerHTML) {
+                    nextC.innerHTML = `<img src="img-${items[idx+1].dataset.id}.avif" style="display:none;" onload="this.style.display='block'">`;
+                }
+            }
         };
 
-        requestAnimationFrame(sync);
+        const sync = () => {
+            const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
+            
+            items.forEach((item, i) => {
+                const center = item.offsetTop + (item.offsetHeight / 2);
+                if (Math.abs(mainCenter - center) < window.innerHeight / 3) {
+                    if (lastIdx !== i) {
+                        lastIdx = i;
+                        updateUI(i);
+                        if (!isUserScrollingSlider) {
+                            thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                        }
+                    }
+                }
+            });
+        };
 
+        // UI Events
+        wrapper.addEventListener('scroll', sync, { passive: true });
+        
+        slider.onmouseenter = () => { isUserScrollingSlider = true; document.body.classList.add('active-ui'); };
+        slider.onmouseleave = () => { isUserScrollingSlider = false; document.body.classList.remove('active-ui'); };
+        slider.ontouchstart = () => { isUserScrollingSlider = true; document.body.classList.add('active-ui'); };
+        slider.ontouchend = () => { setTimeout(() => isUserScrollingSlider = false, 1000); };
+
+        // Slideshow Logic
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
@@ -203,13 +312,25 @@
             } else clearInterval(autoTimer);
         };
 
+        // Key Controls
         window.onkeydown = (e) => {
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(lastIdx + 1, total-1)].scrollIntoView();
-            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(lastIdx - 1, 0)].scrollIntoView();
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                e.preventDefault();
+                items[Math.min(lastIdx + 1, total-1)].scrollIntoView({ behavior: 'smooth' });
+            }
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                items[Math.max(lastIdx - 1, 0)].scrollIntoView({ behavior: 'smooth' });
+            }
         };
 
-        wrapper.onwheel = () => { if(isAuto) btn.click(); };
-        wrapper.ontouchstart = () => { if(isAuto) btn.click(); };
+        // Stop auto on interaction
+        const stopAuto = () => { if(isAuto) btn.click(); };
+        wrapper.onwheel = stopAuto;
+        wrapper.ontouchstart = stopAuto;
+
+        // Initialize First UI state
+        updateUI(0);
     </script>
 </body>
 </html>
