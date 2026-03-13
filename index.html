@@ -6,7 +6,11 @@
     <title>ULTRA HDR • CLARENCE</title>
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --glass: rgba(10, 10, 10, 0.7); --border: rgba(255, 255, 255, 0.1); }
+        :root { 
+            --bg: #000; 
+            --glass: rgba(12, 12, 12, 0.65); 
+            --border: rgba(255, 255, 255, 0.08); 
+        }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
@@ -14,10 +18,11 @@
             height: 100%; width: 100%; overflow: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        /* 1. MAIN VERTICAL VIEWPORT */
+        /* 1. MAIN DISPLAY (10% PEEK) */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
-            scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+            scroll-behavior: auto; /* Instant sync for scrubbing */
+            -webkit-overflow-scrolling: touch; scrollbar-width: none;
         }
         #main-wrapper::-webkit-scrollbar { display: none; }
 
@@ -35,37 +40,37 @@
 
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), filter 1.8s cubic-bezier(0.2, 1, 0.2, 1);
-            filter: brightness(0.65) blur(2px); transform: scale(0.92); will-change: transform, filter;
+            transition: transform 1.2s cubic-bezier(0.2, 1, 0.2, 1), filter 1.2s ease;
+            filter: brightness(0.7) blur(2px); transform: scale(0.94);
         }
         .active .photo-container { filter: brightness(1.1) blur(0px); transform: scale(1); }
         img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 150px rgba(0,0,0,1); }
 
-        /* 2. UNLOCKED FREE-FLOW LIQUID GLASS STRIP */
+        /* 2. INSTANT iOS 26 LIQUID GLASS STRIP */
         #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 150px; z-index: 10001; }
         
         #thumb-slider {
             position: fixed; bottom: 30px; left: 50%; transform: translate3d(-50%, 80px, 0);
             width: 92%; max-width: 550px; height: 70px; z-index: 10002;
-            display: flex; align-items: center; 
-            background: var(--glass); backdrop-filter: blur(45px) saturate(1.8);
-            -webkit-backdrop-filter: blur(45px) saturate(1.8);
+            display: flex; align-items: center; gap: 12px; overflow-x: auto;
+            padding: 0 20px; 
+            background: var(--glass);
+            backdrop-filter: blur(40px) saturate(1.8) contrast(1.1);
+            -webkit-backdrop-filter: blur(40px) saturate(1.8) contrast(1.1);
             border-radius: 24px; border: 1px solid var(--border);
             opacity: 0; transition: all 0.6s cubic-bezier(0.15, 1, 0.3, 1);
-            overflow-x: auto; scrollbar-width: none; pointer-events: none;
-            /* Scroll snap removed for free-flow movement */
+            scrollbar-width: none; pointer-events: none;
         }
         #thumb-slider::-webkit-scrollbar { display: none; }
         #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { opacity: 1; transform: translate3d(-50%, 0, 0); pointer-events: auto; }
 
-        .slider-rail { display: flex; align-items: center; gap: 12px; height: 100%; padding: 0 20px; }
+        .slider-rail { display: flex; align-items: center; gap: 12px; height: 100%; }
 
         .thumb {
             flex: 0 0 34px; height: 22px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.4s cubic-bezier(0.15, 1, 0.3, 1);
             opacity: 0.35; filter: brightness(0.75); cursor: pointer;
         }
-        /* Thumbnail pops only when the main scroll reaches the photo */
         .thumb.active-thumb { flex: 0 0 44px; height: 44px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
         #slideshow-btn {
@@ -105,7 +110,7 @@
         const total = 39;
         let isAuto = false, autoTimer, lastIdx = 0;
 
-        // 1. Build Main Gallery
+        // 1. DOM Setup
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -115,7 +120,6 @@
         }
         root.appendChild(frag);
 
-        // 2. Build Unlocked Rail
         for (let i = 1; i <= total; i++) {
             const t = document.createElement('div');
             t.className = 'thumb';
@@ -127,38 +131,61 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // 3. FRAME-SYNC ENGINE
+        // 2. INSTANT SIMULTANEOUS SYNC ENGINE
         const sync = () => {
+            const sliderCenter = slider.scrollLeft + (slider.offsetWidth / 2);
             const mainCenter = wrapper.scrollTop + (window.innerHeight / 2);
-            
-            items.forEach((item, i) => {
-                const itemCenter = item.offsetTop + (item.offsetHeight / 2);
-                if (Math.abs(mainCenter - itemCenter) < 250) {
-                    if (lastIdx !== i) {
-                        lastIdx = i;
-                        item.classList.add('active');
-                        thumbs[i].classList.add('active-thumb');
-                        
-                        // Automatically slide the rail to reveal the active thumb
-                        if (!slider.matches(':hover')) {
-                            thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                        }
-                        titleBlock.style.opacity = i === 0 ? "1" : "0";
-                    }
-                    const c = item.querySelector('.photo-container');
-                    if (item.dataset.id && c && !c.innerHTML) {
-                        c.innerHTML = `<img src="img-${item.dataset.id}.avif">`;
-                    }
-                } else {
-                    item.classList.remove('active');
-                    thumbs[i].classList.remove('active-thumb');
+
+            // Sync: Horizontal Scrubbing -> Instant Main Display
+            if (slider.matches(':hover')) {
+                let closestIdx = 0;
+                let minDist = Infinity;
+
+                thumbs.forEach((t, i) => {
+                    const tCenter = t.offsetLeft + (t.offsetWidth / 2);
+                    const d = Math.abs(sliderCenter - tCenter);
+                    if (d < minDist) { minDist = d; closestIdx = i; }
+                });
+                
+                if (lastIdx !== closestIdx) {
+                    lastIdx = closestIdx;
+                    // Use 'auto' for instantaneous tracking
+                    items[closestIdx].scrollIntoView({ behavior: 'auto' });
+                    updateUI(closestIdx);
                 }
-            });
+            } else {
+                // Sync: Vertical Scroll -> Slider Thumbnail
+                items.forEach((item, i) => {
+                    const itemCenter = item.offsetTop + (item.offsetHeight / 2);
+                    if (Math.abs(mainCenter - itemCenter) < 200) {
+                        if (lastIdx !== i) {
+                            lastIdx = i;
+                            updateUI(i);
+                            if (!isAuto) {
+                                thumbs[i].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                            }
+                        }
+                    }
+                });
+            }
             requestAnimationFrame(sync);
         };
+
+        const updateUI = (idx) => {
+            items.forEach((it, i) => it.classList.toggle('active', i === idx));
+            thumbs.forEach((th, i) => th.classList.toggle('active-thumb', i === idx));
+            titleBlock.style.opacity = idx === 0 ? "1" : "0";
+            
+            // Smart Image Loading
+            const c = items[idx].querySelector('.photo-container');
+            if (items[idx].dataset.id && c && !c.innerHTML) {
+                c.innerHTML = `<img src="img-${items[idx].dataset.id}.avif">`;
+            }
+        };
+
         requestAnimationFrame(sync);
 
-        // 4. PREMIUM AUTO-SCROLL (4s cycle / 1.8s ease)
+        // 3. AUTO SLIDESHOW (4s Cycle)
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
