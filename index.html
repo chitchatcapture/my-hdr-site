@@ -23,52 +23,44 @@
         #main-wrapper::-webkit-scrollbar { display: none; }
 
         header, section {
-            height: 80vh; /* (100vh - 80vh) / 2 = 10% Peek top/bottom */
+            height: 80vh; /* 10% Peek top/bottom */
             width: 100vw; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; scroll-snap-align: center;
             scroll-snap-stop: always; position: relative;
         }
-        header { height: 100vh; gap: 40px; } /* First page centered */
+        header { height: 100vh; gap: 40px; }
 
         .header-content { text-align: center; transition: opacity 0.6s ease; will-change: opacity; }
         h1 { font-size: 0.8rem; font-weight: 300; letter-spacing: 0.9em; text-transform: uppercase; margin: 0; }
         .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; margin-top: 15px; }
 
+        /* 2. REFINED STRIP FOCUS (BRIGHTER NEIGHBORS) */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
             transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1), filter 0.7s ease, opacity 0.7s ease;
-            filter: brightness(0.45) blur(2px); opacity: 0.7; transform: scale(0.92);
+            /* Dimmed less: From 0.45 to 0.7 brightness */
+            filter: brightness(0.7) blur(1px); 
+            opacity: 0.85; 
+            transform: scale(0.94);
             will-change: transform, filter;
         }
-        .active .photo-container { filter: brightness(1) blur(0px); opacity: 1; transform: scale(1); }
-        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 100px rgba(0,0,0,1); }
-
-        /* 2. TOP RIGHT CONTROLS */
-        .controls-group {
-            position: fixed; top: 30px; right: 30px; z-index: 10000;
-            display: flex; flex-direction: column; align-items: flex-end; gap: 15px;
+        .active .photo-container { 
+            filter: brightness(1) blur(0px); 
+            opacity: 1; 
+            transform: scale(1); 
         }
 
+        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 100px rgba(0,0,0,1); }
+
+        /* 3. AUTO BUTTON (TOP RIGHT) */
         #slideshow-btn {
+            position: fixed; top: 30px; right: 30px; z-index: 10000;
             background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
             color: #fff; padding: 10px 22px; border-radius: 40px; font-size: 0.6rem;
             letter-spacing: 0.2em; cursor: pointer; backdrop-filter: blur(15px);
-            transition: all 0.3s ease;
         }
 
-        .nav-arrows { display: flex; flex-direction: column; gap: 6px; }
-        @media (max-width: 1023px) { .nav-arrows { display: none; } }
-        
-        .key {
-            width: 26px; height: 26px; border: 1.5px solid var(--ui); border-radius: 6px;
-            background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px); cursor: pointer;
-        }
-        .key::after { content: ''; border: solid #fff; border-width: 0 2px 2px 0; padding: 3px; }
-        .u::after { transform: rotate(-135deg); } .d::after { transform: rotate(45deg); }
-        .l::after { transform: rotate(135deg); } .r::after { transform: rotate(-45deg); }
-
-        /* 3. HOVER-TRIGGER FILMSTRIP */
+        /* 4. HOVER-TRIGGER FILMSTRIP (BOTTOM) */
         #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; z-index: 10001; }
         #thumb-slider {
             position: fixed; bottom: 25px; left: 50%; transform: translate3d(-50%, 40px, 0);
@@ -86,7 +78,7 @@
         .thumb {
             flex: 0 0 32px; height: 22px; background-size: cover; background-position: center;
             border-radius: 4px; transition: all 0.4s cubic-bezier(0.2, 1, 0.2, 1);
-            opacity: 0.3; filter: brightness(0.6); cursor: pointer;
+            opacity: 0.4; filter: brightness(0.7); cursor: pointer;
         }
         .thumb.active-thumb { flex: 0 0 42px; height: 42px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
@@ -94,7 +86,6 @@
             header, section { height: 80vh; } header { height: 100vh; }
             .photo-container { width: 95%; height: 60vh; }
             #thumb-slider { height: 50px; bottom: 20px; }
-            .controls-group { top: 20px; right: 20px; }
         }
     </style>
 </head>
@@ -111,22 +102,11 @@
         <div id="gallery-root"></div>
     </div>
 
-    <!-- Grouped Top-Right Controls -->
-    <div class="controls-group">
-        <button id="slideshow-btn">AUTO</button>
-        <div class="nav-arrows">
-            <div style="display:flex; justify-content:flex-end;"><div class="key u" onclick="navigate(-1)"></div></div>
-            <div style="display:flex; gap:6px;">
-                <div class="key l" onclick="navigate(-1)"></div>
-                <div class="key d" onclick="navigate(1)"></div>
-                <div class="key r" onclick="navigate(1)"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Trigger Zone -->
+    <!-- UI Trigger & Bottom Slider -->
     <div id="ui-trigger-zone"></div>
     <div id="thumb-slider"></div>
+
+    <button id="slideshow-btn">AUTO</button>
 
     <script>
         const root = document.getElementById('gallery-root');
@@ -137,7 +117,7 @@
         let isAuto = false;
         let timer;
 
-        // Build DOM
+        // Populate Gallery
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -147,6 +127,7 @@
         }
         root.appendChild(frag);
 
+        // Populate Thumbnails
         for (let i = 1; i <= total; i++) {
             const t = document.createElement('div');
             t.className = 'thumb';
@@ -158,19 +139,22 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // Observer for focus and thumbnail sync
+        // Logic for Focus & Syncing
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const idx = [...items].indexOf(entry.target);
                     entry.target.classList.add('active');
                     
+                    // Sync Slider
                     thumbs.forEach(t => t.classList.remove('active-thumb'));
                     thumbs[idx].classList.add('active-thumb');
                     thumbs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
+                    // UI Toggle
                     titleBlock.style.opacity = idx === 0 ? "1" : "0";
 
+                    // Pre-loading
                     const load = (el) => {
                         if (!el) return;
                         const c = el.querySelector('.photo-container');
@@ -188,30 +172,30 @@
 
         items.forEach(i => obs.observe(i));
 
-        // Global Navigation
-        function navigate(dir) {
-            const curr = [...items].indexOf(document.querySelector('.active'));
-            const target = Math.max(0, Math.min(curr + dir, items.length - 1));
-            items[target].scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // Controls
+        // Auto Slideshow
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
             btn.style.background = isAuto ? "#fff" : "var(--glass)";
             btn.style.color = isAuto ? "#000" : "#fff";
             if (isAuto) {
-                timer = setInterval(() => navigate(1), 4000);
+                timer = setInterval(() => {
+                    const curr = [...items].indexOf(document.querySelector('.active'));
+                    items[(curr + 1) % items.length].scrollIntoView({ behavior: 'smooth' });
+                }, 4000);
             } else clearInterval(timer);
         };
 
+        // Keyboard Support
         window.onkeydown = (e) => {
-            if (e.key === "ArrowDown" || e.key === "ArrowRight") navigate(1);
-            if (e.key === "ArrowUp" || e.key === "ArrowLeft") navigate(-1);
+            const curr = [...items].indexOf(document.querySelector('.active'));
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(curr + 1, total-1)].scrollIntoView();
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(curr - 1, 0)].scrollIntoView();
         };
 
+        // Interaction kill
         wrapper.onwheel = () => { if(isAuto) btn.click(); };
+        wrapper.ontouchstart = () => { if(isAuto) btn.click(); };
     </script>
 </body>
 </html>
