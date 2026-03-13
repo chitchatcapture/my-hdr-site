@@ -6,42 +6,45 @@
     <title>ULTRA HDR • CLARENCE</title>
     <link rel="preload" href="img-1.avif" as="image" fetchpriority="high">
     <style>
-        :root { --bg: #000; --ui: rgba(255, 255, 255, 0.9); --glass: rgba(15, 15, 15, 0.7); }
+        :root { --bg: #000; --ui: rgba(255, 255, 255, 0.95); --glass: rgba(12, 12, 12, 0.7); }
         
         html, body { 
             background: var(--bg); color: #fff; margin: 0; padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
             height: 100%; width: 100%; overflow: hidden; -webkit-font-smoothing: antialiased;
         }
 
-        /* 1. 10% PEEK SCROLLING (80vh active) */
+        /* 1. CINEMATIC SMOOTH SCROLL */
         #main-wrapper {
             height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory;
+            /* Native physics for manual, JS-driven for Auto */
             scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
         #main-wrapper::-webkit-scrollbar { display: none; }
 
         header, section {
-            height: 80vh; /* 10% Peek top/bottom */
-            width: 100vw; display: flex; flex-direction: column; 
+            height: 80vh; width: 100vw; display: flex; flex-direction: column; 
             justify-content: center; align-items: center; scroll-snap-align: center;
             scroll-snap-stop: always; position: relative;
+            will-change: transform;
         }
         header { height: 100vh; gap: 40px; }
 
-        .header-content { text-align: center; transition: opacity 0.6s ease; will-change: opacity; }
-        h1 { font-size: 0.8rem; font-weight: 300; letter-spacing: 0.9em; text-transform: uppercase; margin: 0; }
-        .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; margin-top: 15px; }
+        .header-content { text-align: center; transition: opacity 1s ease; will-change: opacity; }
+        h1 { font-size: 0.85rem; font-weight: 300; letter-spacing: 0.9em; text-transform: uppercase; margin: 0; }
+        .credit { color: rgba(255,255,255,0.4); font-size: 0.55rem; letter-spacing: 0.5em; text-transform: uppercase; margin-top: 15px; }
 
-        /* 2. REFINED STRIP FOCUS (BRIGHTER NEIGHBORS) */
+        /* 2. PREMIUM STRIP FOCUS */
         .photo-container { 
             width: 90%; height: 70vh; display: flex; justify-content: center; align-items: center;
-            transition: transform 0.7s cubic-bezier(0.2, 1, 0.3, 1), filter 0.7s ease, opacity 0.7s ease;
-            /* Dimmed less: From 0.45 to 0.7 brightness */
-            filter: brightness(0.7) blur(1px); 
+            /* Slow, smooth cinematic transitions */
+            transition: transform 1.8s cubic-bezier(0.2, 1, 0.2, 1), 
+                        filter 1.8s cubic-bezier(0.2, 1, 0.2, 1), 
+                        opacity 1.8s ease;
+            filter: brightness(0.75) blur(1px); 
             opacity: 0.85; 
-            transform: scale(0.94);
+            transform: scale(0.95);
             will-change: transform, filter;
         }
         .active .photo-container { 
@@ -50,25 +53,47 @@
             transform: scale(1); 
         }
 
-        img { max-width: 100%; max-height: 100%; border-radius: 2px; box-shadow: 0 40px 100px rgba(0,0,0,1); }
-
-        /* 3. AUTO BUTTON (TOP RIGHT) */
-        #slideshow-btn {
-            position: fixed; top: 30px; right: 30px; z-index: 10000;
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
-            color: #fff; padding: 10px 22px; border-radius: 40px; font-size: 0.6rem;
-            letter-spacing: 0.2em; cursor: pointer; backdrop-filter: blur(15px);
+        img { 
+            max-width: 100%; max-height: 100%; border-radius: 2px; 
+            box-shadow: 0 40px 120px rgba(0,0,0,1); 
         }
 
-        /* 4. HOVER-TRIGGER FILMSTRIP (BOTTOM) */
+        /* 3. APPLE-STYLE AUTO BUTTON WITH PROGRESS */
+        .auto-container {
+            position: fixed; top: 30px; right: 30px; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #slideshow-btn {
+            background: var(--glass); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 12px 24px; border-radius: 40px; font-size: 0.6rem;
+            letter-spacing: 0.3em; cursor: pointer; backdrop-filter: blur(20px);
+            transition: all 0.5s ease; position: relative;
+        }
+
+        .progress-ring {
+            position: absolute; top: -2px; left: -2px; width: calc(100% + 4px); height: calc(100% + 4px);
+            pointer-events: none; opacity: 0; transition: opacity 0.5s;
+        }
+        .progress-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .progress-ring circle {
+            fill: none; stroke: #fff; stroke-width: 2;
+            stroke-dasharray: 300; stroke-dashoffset: 300;
+            transition: stroke-dashoffset 4s linear; /* Matches auto-scroll time */
+        }
+        
+        .auto-active .progress-ring { opacity: 1; }
+        .auto-active #slideshow-btn { background: #fff; color: #000; font-weight: 600; border-color: transparent; }
+
+        /* 4. HIDDEN FILMSTRIP TRIGGER */
         #ui-trigger-zone { position: fixed; bottom: 0; left: 0; width: 100%; height: 100px; z-index: 10001; }
         #thumb-slider {
-            position: fixed; bottom: 25px; left: 50%; transform: translate3d(-50%, 40px, 0);
-            width: 92%; max-width: 500px; height: 60px; z-index: 10002;
-            display: flex; align-items: center; gap: 8px; overflow-x: auto;
-            padding: 0 45%; background: var(--glass); backdrop-filter: blur(30px);
-            border-radius: 18px; scrollbar-width: none; border: 1px solid rgba(255,255,255,0.08);
-            opacity: 0; transition: all 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            position: fixed; bottom: 30px; left: 50%; transform: translate3d(-50%, 40px, 0);
+            width: 90%; max-width: 480px; height: 60px; z-index: 10002;
+            display: flex; align-items: center; gap: 10px; overflow-x: auto;
+            padding: 0 45%; background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border-radius: 20px; scrollbar-width: none; border: 1px solid rgba(255,255,255,0.06);
+            opacity: 0; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             pointer-events: none;
         }
         #ui-trigger-zone:hover ~ #thumb-slider, #thumb-slider:hover { 
@@ -77,8 +102,8 @@
 
         .thumb {
             flex: 0 0 32px; height: 22px; background-size: cover; background-position: center;
-            border-radius: 4px; transition: all 0.4s cubic-bezier(0.2, 1, 0.2, 1);
-            opacity: 0.4; filter: brightness(0.7); cursor: pointer;
+            border-radius: 4px; transition: all 0.5s cubic-bezier(0.2, 1, 0.2, 1);
+            opacity: 0.45; filter: brightness(0.8); cursor: pointer;
         }
         .thumb.active-thumb { flex: 0 0 42px; height: 42px; opacity: 1; filter: brightness(1); border-radius: 6px; }
 
@@ -86,6 +111,7 @@
             header, section { height: 80vh; } header { height: 100vh; }
             .photo-container { width: 95%; height: 60vh; }
             #thumb-slider { height: 50px; bottom: 20px; }
+            .auto-container { top: 20px; right: 20px; }
         }
     </style>
 </head>
@@ -102,22 +128,28 @@
         <div id="gallery-root"></div>
     </div>
 
-    <!-- UI Trigger & Bottom Slider -->
+    <div class="auto-container" id="auto-wrap">
+        <div class="progress-ring">
+            <svg><rect id="progress-bar" x="0" y="0" width="100%" height="100%" rx="20" fill="none" stroke="white" stroke-width="2" style="stroke-dasharray: 400; stroke-dashoffset: 400;""")/>></svg>
+        </div>
+        <button id="slideshow-btn">AUTO</button>
+    </div>
+
     <div id="ui-trigger-zone"></div>
     <div id="thumb-slider"></div>
-
-    <button id="slideshow-btn">AUTO</button>
 
     <script>
         const root = document.getElementById('gallery-root');
         const wrapper = document.getElementById('main-wrapper');
         const slider = document.getElementById('thumb-slider');
         const titleBlock = document.getElementById('title-block');
+        const progBar = document.getElementById('progress-bar');
+        const autoWrap = document.getElementById('auto-wrap');
         const total = 39;
         let isAuto = false;
         let timer;
 
-        // Populate Gallery
+        // 1. Fragment generation for speed
         const frag = document.createDocumentFragment();
         for (let i = 2; i <= total; i++) {
             const s = document.createElement('section');
@@ -127,7 +159,6 @@
         }
         root.appendChild(frag);
 
-        // Populate Thumbnails
         for (let i = 1; i <= total; i++) {
             const t = document.createElement('div');
             t.className = 'thumb';
@@ -139,22 +170,19 @@
         const items = document.querySelectorAll('header, section');
         const thumbs = document.querySelectorAll('.thumb');
 
-        // Logic for Focus & Syncing
+        // 2. Intersection Observer with Premium Threshold
         const obs = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const idx = [...items].indexOf(entry.target);
                     entry.target.classList.add('active');
                     
-                    // Sync Slider
                     thumbs.forEach(t => t.classList.remove('active-thumb'));
                     thumbs[idx].classList.add('active-thumb');
                     thumbs[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 
-                    // UI Toggle
                     titleBlock.style.opacity = idx === 0 ? "1" : "0";
 
-                    // Pre-loading
                     const load = (el) => {
                         if (!el) return;
                         const c = el.querySelector('.photo-container');
@@ -172,28 +200,40 @@
 
         items.forEach(i => obs.observe(i));
 
-        // Auto Slideshow
+        // 3. Cinematic Auto-Navigation
+        function resetProgress() {
+            progBar.style.transition = 'none';
+            progBar.style.strokeDashoffset = '400';
+            setTimeout(() => {
+                progBar.style.transition = 'stroke-dashoffset 4s linear';
+                progBar.style.strokeDashoffset = '0';
+            }, 50);
+        }
+
         const btn = document.getElementById('slideshow-btn');
         btn.onclick = () => {
             isAuto = !isAuto;
-            btn.style.background = isAuto ? "#fff" : "var(--glass)";
-            btn.style.color = isAuto ? "#000" : "#fff";
+            autoWrap.classList.toggle('auto-active');
             if (isAuto) {
+                resetProgress();
                 timer = setInterval(() => {
                     const curr = [...items].indexOf(document.querySelector('.active'));
                     items[(curr + 1) % items.length].scrollIntoView({ behavior: 'smooth' });
+                    resetProgress();
                 }, 4000);
-            } else clearInterval(timer);
+            } else {
+                clearInterval(timer);
+                progBar.style.strokeDashoffset = '400';
+            }
         };
 
-        // Keyboard Support
+        // Smooth Keyboard Sync
         window.onkeydown = (e) => {
             const curr = [...items].indexOf(document.querySelector('.active'));
             if (e.key === "ArrowDown" || e.key === "ArrowRight") items[Math.min(curr + 1, total-1)].scrollIntoView();
             if (e.key === "ArrowUp" || e.key === "ArrowLeft") items[Math.max(curr - 1, 0)].scrollIntoView();
         };
 
-        // Interaction kill
         wrapper.onwheel = () => { if(isAuto) btn.click(); };
         wrapper.ontouchstart = () => { if(isAuto) btn.click(); };
     </script>
